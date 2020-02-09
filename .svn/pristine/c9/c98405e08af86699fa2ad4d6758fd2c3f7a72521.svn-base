@@ -1,0 +1,303 @@
+
+<template>
+  <div class="app-container">
+    <!-- <el-tabs type="border-card" v-model="CurrentTab" class="tabs" ref="tabs"> -->
+      <!-- <el-tab-pane  label="程序更新" name="updateProgram"> -->
+         <router-link class="board-item-box" :to="'/TopicSingle?topicId='+item.Id" v-for="item in newTopicList" :key="item.Id">
+          <div class="board-item">
+                <span class="line" :style="{borderLeft: `4px solid ${item.Color}`}"></span>
+            <div class="title-recent">
+               
+              <div class="avatar" :style="{background:item.Color}">
+                <!-- <img src="http://szcert.ebs.org.cn/Images/govIcon.gif" alt=""> -->
+                {{item.KeyFileIds.substring(0,1) }}
+              </div>
+              <div class="right">
+                <h2>
+                  <p class="title" :title="item.FirstContent">
+                    {{item.Title}}
+                  </p>
+                </h2>
+              </div>
+            </div>
+            <div class="left">
+              <div class="topic-info lefttext">
+                <!-- <router-link class="author" to="/">
+                          {{item.CreateName}}
+                        </router-link> -->
+                <span class="time">
+                                  时间：{{item.CreateTime}}
+                            </span>
+              </div>
+              <div class="lefttext">
+                <span class="keyFiles">
+                            类型：<i class="block" :style="{background:item.Color}"></i> {{item.KeyFileIds}}
+                            </span>
+              </div>
+            </div>
+            <span class="icons">
+                            <!-- icon专用 TODO -->
+                          </span>
+            <div class="append-icons">
+              <!-- icon专用 TODO -->
+            </div>
+          </div>
+        </router-link>
+      <!-- </el-tab-pane> -->
+     
+   
+    <!-- </el-tabs> -->
+     <el-pagination class="page" layout="total,sizes,prev, pager, next" :current-page="queryList.pageIndex" @size-change="handleSizeChange" @current-change="handlePageChange" :page-sizes="[10, 20, 30, 50]" :total="total">
+    </el-pagination>
+  </div>
+</template>
+
+<script>
+ import {
+    getList
+  } from '@/api/publictopic.js';
+   import {
+    formatTime,
+    delHtmlTag
+  } from '@/utils/index'
+  export default {
+    data() {
+      return {
+         newTopicList: [], //新话题的列表
+        total: 0, //总条数
+        colorBox: {
+           "ULSG打推": "#FB966E",
+          "ET打推": "rgb(64, 158, 255)",
+          "Bag打推": "#FF9999",
+          "排料": "#99CC33",
+          "绘图仪和切割机": "#FF9900",
+          "网络睿排": "rgb(239, 191, 0)",
+          "版本发布": "#FF0033",
+          "ETPS": "#FF9966",
+          "ETBRA": "#FF8000",
+          "裁床": "#FF9966",
+          "功能操作说明": "#FF9966",
+          "没有": "#CCC",
+          "排料": "#99CC33",
+          "升级内容": "#00AEAE",
+          "数字化仪": "#0066CC",
+          "培训文档": "#8C8C00",
+          "ICM": "#8080C0",
+          "PPT": "#804040",
+          "微信": "#8F4586",
+          "ET": "#00EC00"
+        },
+        CurrentTab: 'updateProgram', //当前tab位置
+        queryList:{
+          pageIndex: 1, //当前页数
+          pageSize: 10, //一页显示的条数
+        }
+      }
+    },
+      watch: {
+      CurrentTab(newValue, oldValue) {
+        let group = null;
+        if (newValue == 'updateProgram') {
+          group = 1
+        } else if (newValue == 'question') {
+          group = 2
+        } else if(newValue = 'other'){
+            group = 0
+        }
+        else {
+          group = null
+        }
+        this.ResetQueryList(group).then(res => {
+          this.getList();
+        }).catch(err => {
+          if (this.queryList.group == null) {
+            this.$message({
+              message: "状态错误",
+              type: "error"
+            })
+            return false;
+          }
+        })
+      }
+    },
+    created() {
+      this.getList();
+    },
+    methods: {
+      getList(){
+        // console.log(this.queryList)
+        getList(this.queryList).then(res=>{
+             if (res.Success) {
+           this.newTopicList = res.Data.Rows.map(el => {
+              el.CreateTime = formatTime(el.CreateTime, false)
+               if(el.KeyFileIds.indexOf(",") != -1 ){
+                    el.KeyFileIds = el.KeyFileIds.substring(0, el.KeyFileIds.length - 1)
+                    let colorBox = el.KeyFileIds.split(',');
+                    el.Color = this.colorBox[colorBox[0]]
+                    
+               }else{
+                 let colorBox = el.KeyFileIds.split(',');
+                    el.Color = this.colorBox[colorBox[0]]
+                  // let colorBox = el.KeyFileIds.split(',');
+               }
+              // let colorBox = el.KeyFileIds.split(',');
+              //  console.log(colorBox)
+              // el.FirstContent = delHtmlTag(el.FirstContent)
+              return el
+            });
+            this.total = res.Data.Total;
+          }
+        })
+      },
+        ResetQueryList(state) {
+        this.queryList.pageIndex = 1;
+        this.queryList.group = state;
+        return new Promise((resolve, reject) => {
+          if (state != null) {
+            resolve()
+          } else {
+            reject()
+          }
+        })
+      },
+        handlePageChange(page) {
+        this.queryList.pageIndex = page;
+        this.getList();
+      },
+      handleSizeChange(val) {
+        this.queryList.pageSize = val;
+        this.queryList.pageIndex = 1;
+        this.getList();
+      },
+      onSubmit() {
+        this.$message('submit!')
+      },
+      onCancel() {
+        this.$message({
+          message: 'cancel!',
+          type: 'warning'
+        })
+      }
+    }
+  }
+</script>
+
+<style rel="stylesheet/scss" lang="scss" scoped>
+  .line {
+    text-align: center;
+  }
+   .line {
+    // border-left: 4px solid #ccc;
+    height: 85%;
+    padding-left: 0;
+    opacity: .6;
+  }
+  .mytask {
+    &-text {
+      font-size: 30px;
+      line-height: 46px;
+    }
+  }
+  .board-item-box {
+    // border:1px solid red;
+    display: block;
+    width: 100%;
+    height: 100px;
+    border-radius: 10px;
+    padding: 5px;
+    box-sizing: border-box;
+  }
+  .board-item-box:hover {
+    background: #e5effa;
+  }
+  .board-item {
+    display: flex;
+    height: 100%;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .title {
+    color: #495057;
+    font-size: 0.8em;
+    margin: 10px 0;
+    white-space: nowrap;
+    /* 不换行 */
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    width: 600px;
+  }
+  .title-recent {
+    display: flex;
+    width: 50%;
+    height: 100%;
+    margin-left: 30px;
+    align-items: center;
+    min-width: 700px;
+  }
+  .title-recent .avatar {
+    height: 32px;
+    min-width: 32px;
+    font-size: 20px;
+    // text-align: center;
+    text-align:  line-height;
+    line-height: 28px;
+    color: #fff;
+    border-radius: 5px;
+    box-sizing: border-box;
+    opacity: .6;
+  }
+  .title-recent .avatar img {
+    // max-height:50px;
+    // max-width:50px;
+    height: 100%;
+    width: 100%;
+  }
+  .title-recent .right {
+    margin-left: 10px;
+  }
+  .title-recent .right h2 p {
+    margin: 10px 0;
+    font-size: 18px;
+  }
+  .topic-info {
+    width: 125px;
+  }
+  .title-recent .right .topic-info {
+    font-size: 15px;
+    width: 500px;
+  }
+  .title-recent .right .topic-info .author {
+    display: inline-block;
+    color: #337ab7;
+    width: 70px;
+  }
+  .title-recent .right .topic-info .time {
+    margin-left: 10px;
+    width: 130px;
+  }
+  .title-recent .right .keyFiles {
+    font-size: 16px;
+    margin-left: 10px;
+    color: #343a40;
+  }
+  .left {
+    display: flex;
+    width: 45%;
+    margin-left: 80px;
+    justify-content: flex-start;
+    .lefttext {
+      flex: 1;
+      overflow-x: hidden;/*超出部分隐藏*/
+      text-overflow:ellipsis;/* 超出部分显示省略号 */
+      white-space: nowrap;/*规定段落中的文本不进行换行 */
+      width: 200px;/*需要配合宽度来使用*/
+      .keyFiles {
+        font-size: 17px;
+      }
+    }
+  }
+</style>
+
+
+

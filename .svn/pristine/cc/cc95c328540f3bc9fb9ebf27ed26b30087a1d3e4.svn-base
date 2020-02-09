@@ -1,0 +1,83 @@
+<template>
+  <div class="app-container">
+    <el-tabs type="border-card">
+      <el-tab-pane label="更改登录密码">
+        <el-form :inline="true">
+          <el-form-item label="原始密码">
+            <el-input v-model="password.OldPwd"></el-input>
+          </el-form-item>
+          <el-form-item label="新密码">
+            <el-input v-model="password.NewPwd"></el-input>
+          </el-form-item>
+          <el-form-item label="确认新密码">
+            <el-input v-model="password.ReplyPwd"></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="onSubmit">确认</el-button>
+          </el-form-item>
+        </el-form>
+      </el-tab-pane>
+      <el-tab-pane label="更改联系方式">
+        <el-form :inline="true">
+          <el-form-item label="邮箱地址">
+            <el-input v-model="email"></el-input>
+          </el-form-item>
+          <el-form-item label="微信账号">
+            <el-input v-model="WX" disabled="true"></el-input>(如更换微信号,请与开发部联系,在企业号后台修改)
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary">
+              确认
+            </el-button>
+          </el-form-item>
+        </el-form>
+      </el-tab-pane>
+      <el-tab-pane label="绑定mac地址">
+        <el-form :inline="true">
+          <el-form-item label="MAC地址">
+            <el-input v-model="MAC"></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary">
+              确认
+            </el-button>
+          </el-form-item>
+        </el-form>
+      </el-tab-pane>
+    </el-tabs>
+  </div>
+</template>
+
+<script>
+  export default {
+    data() {
+      return {
+        password:{
+          OldPwd:"",
+          NewPwd:"",
+          ReplyPwd:""
+        },
+        email:"",
+        WX:""
+      }
+    },
+    methods: {
+      onSubmit() {
+        this.$message('submit!')
+      },
+      onCancel() {
+        this.$message({
+          message: 'cancel!',
+          type: 'warning'
+        })
+      }
+    }
+  }
+</script>
+
+<style scoped>
+  .line {
+    text-align: center;
+  }
+</style>
+

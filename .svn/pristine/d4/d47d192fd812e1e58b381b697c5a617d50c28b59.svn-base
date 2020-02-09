@@ -1,0 +1,134 @@
+<template>
+  <!-- PublicTopic本公司公告 -->
+  <div>
+    <div>
+      <router-link
+        class="border-item"
+        :to="'/TopicSingle?topicId='+item.Id"
+        v-for="item in newTopicList"
+        :key="item.Id"
+      >
+        <TopicItem :item="item" :flashTopic="getList"></TopicItem>
+      </router-link>
+      <noItem v-if="newTopicList.length==0" v-loading="loadingState"></noItem>
+    </div>
+
+    <el-pagination
+      class="page"
+      layout="total,sizes,prev, pager, next"
+      :current-page="queryList.pageIndex"
+      @size-change="handleSizeChange"
+      @current-change="handlePageChange"
+      :page-sizes="[10, 20, 30, 50]"
+      :total="total"
+    ></el-pagination>
+  </div>
+</template>
+
+<script>
+import TopicItem from "@/components/TopicItem";
+import { getList } from "@/api/publictopic.js";
+import noItem from "@/components/NoItem";
+export default {
+  components: {
+    TopicItem: TopicItem,
+    noItem
+  },
+  data() {
+    return {
+      newTopicList: [], //新话题的列表
+      total: 0, //总条数
+      CurrentTab: "updateProgram", //当前tab位置
+      queryList: {
+        pageIndex: 1, //当前页数
+        pageSize: 10 //一页显示的条数
+      },
+      loadingState: false
+    };
+  },
+  watch: {
+    CurrentTab(newValue, oldValue) {
+      let group = null;
+      if (newValue == "updateProgram") {
+        group = 1;
+      } else if (newValue == "question") {
+        group = 2;
+      } else if ((newValue = "other")) {
+        group = 0;
+      } else {
+        group = null;
+      }
+      this.loadingState = true;
+      this.ResetQueryList(group);
+      this.loadingState = false
+        .then(res => {
+          this.getList();
+        })
+        .catch(err => {
+          if (this.queryList.group == null) {
+            this.$message({
+              message: "状态错误",
+              type: "error"
+            });
+            return false;
+          }
+        });
+    }
+  },
+  created() {
+    this.getList();
+  },
+  methods: {
+    getList() {
+      getList(this.queryList).then(res => {
+        if (res.Success) {
+          this.newTopicList = res.Data.Rows;
+          this.total = res.Data.Total;
+        }
+      });
+    },
+    ResetQueryList(state) {
+      this.queryList.pageIndex = 1;
+      this.queryList.group = state;
+      return new Promise((resolve, reject) => {
+        if (state != null) {
+          resolve();
+        } else {
+          reject();
+        }
+      });
+    },
+    handlePageChange(page) {
+      this.queryList.pageIndex = page;
+      this.getList();
+    },
+    handleSizeChange(val) {
+      this.queryList.pageSize = val;
+      this.queryList.pageIndex = 1;
+      this.getList();
+    }
+  }
+};
+</script>
+<style lang="scss" scoped>
+.board-item-box {
+  /* height:100px; */
+  width: 100%;
+}
+
+.border-item {
+  background: #fff;
+  height: 80px;
+  display: block;
+  margin-bottom: 5px;
+  border-radius: 5px;
+  padding: 0 5px;
+}
+
+.border-item:hover {
+  background: #e5effa;
+}
+.clear {
+  clear: both;
+}
+</style>

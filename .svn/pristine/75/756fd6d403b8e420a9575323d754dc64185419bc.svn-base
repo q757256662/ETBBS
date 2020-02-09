@@ -1,0 +1,59 @@
+<template>
+  <div class="pagination-container">
+    <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
+      :current-page.sync="listQuery.pageIndex" :page-sizes="[10,20,30,50]" :page-size="listQuery.pageSize"
+      layout="total, sizes, prev, pager, next, jumper" :total="total"> </el-pagination>
+  </div>
+</template>
+<script>
+  export default {
+    name: "Pagination",
+    props: {
+      total: {
+        type: Number,
+        default: 100
+      },
+      listQuery: {
+        type: Object,
+        // required: true
+      }
+    },
+    data() {
+      return {
+        pageSize:0
+      }
+    },
+
+    methods: {
+      /**一页展示多少条数据 */
+      handleSizeChange(val) {
+        // console.log(val)
+        this.listQuery.pageSize = val;
+        localStorage.setItem('totalPage', val);
+        this.listQuery.pageIndex = 1;
+        this.$emit("PageChange",this.listQuery)
+      },
+      /**当前页数改变 */
+      handleCurrentChange(val) {
+        // console.log(this.listQuery)
+        // console.log(val);
+        this.listQuery.pageIndex = val
+        this.$emit("PageChange",this.listQuery)
+      },
+
+    },
+    mounted() {
+      this.pageSize = Number(localStorage.getItem('totalPage'))
+      if(this.pageSize==undefined){
+        localStorage.setItem('totalPage', 50);
+        this.pageSize = 50
+      }
+      this.listQuery.pageSize = this.pageSize
+      this.$emit("PageChange",this.listQuery)
+
+        // localStorage.setItem('currentPageName',)
+        // localStorage.setItem('currentPageIndex', val);
+    }
+  }
+
+</script>

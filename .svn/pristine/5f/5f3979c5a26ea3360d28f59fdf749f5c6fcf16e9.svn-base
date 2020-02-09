@@ -1,0 +1,587 @@
+<template>
+  <div class="topic_main">
+    <el-form ref="SubmitTopicForm" :inline="true" :rules="Rules" :model="SubmitForm">
+      <el-form-item prop="TopicTitle" maxlength=11 label="">
+        <el-input class="topic_head" width="100%" v-model="SubmitForm.TopicTitle" placeholder="主题"></el-input>
+      </el-form-item>
+      <br>
+      <el-form-item label="指明关注人">
+        <el-select @change="changeFocus($event)" v-model="SubmitForm.FocusUserId" placeholder="指明关注人">
+          <el-option v-for="item in optionsConcernPeople" :key="item.UserId" :label="item.UserName" :value="item.UserId">
+          </el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="帖子类型">
+        <el-select @change="changeType($event)" v-model="SubmitForm.TopicTypeId" placeholder="帖子类型">
+          <el-option v-for="item in optionsTopicType" :key="item.value" :label="item.label" :value="item.value">
+          </el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="">
+        <el-checkbox @change="changeHot" v-model="checkedUrgency">紧急</el-checkbox>
+      </el-form-item>
+      <el-form-item label="限制分">
+        <el-input v-model="SubmitForm.Score" type="number"></el-input>
+      </el-form-item>
+      <el-input placeholder="请输入关键字" v-model="KeyName" style="width: 300px;"></el-input>
+      <el-form-item prop="Phone" maxlength=11 label="相关师傅手机号">
+        <el-input v-model="SubmitForm.Phone"></el-input>
+      </el-form-item>
+      <el-button type="primary" @click="checkPhone">检查手机号</el-button>
+      <el-select @change="changeSelect($event)" autocomplete="on" :collapse-tags="true" size="medium" style="width:500px;" v-model="SubmitForm.LinkTopicIds" multiple placeholder="最近话题">
+        <el-option v-for="item in optionsTopic" :key="item.TopicId" :label="item.TopicTitle" :value="item.TopicId">
+        </el-option>
+      </el-select>
+      <el-button type="primary" @click="copyTopic">复制到编辑器</el-button>
+      <el-form-item label="关键词">
+        <el-checkbox-group v-model="checkedKeyword" @change="changeKeyname">
+          <el-checkbox v-for="keyWord in keyWords" :label="keyWord.KeyName" :key="keyWord.KeyName">{{keyWord.KeyName}}</el-checkbox>
+        </el-checkbox-group>
+      </el-form-item>
+    </el-form>
+    <div class="context-box">
+      <el-upload class="upload-demo" ref="upload" :header="headersData" :action="common.region" :on-success="handleSuccess" :on-error="handleError" :before-upload="beforeUpload" :on-change="handleChange" :on-remove="handleRemove" :file-list="fileList" :data="common"
+        :http-request="handleSubmit" :auto-upload="false">
+        <el-button slot="trigger" size="small" type="primary">选取文件</el-button>
+        <el-button size="small" type="success" @click="submitUpload" class="submit_btn">上传到服务器</el-button>
+      </el-upload>
+    </div>
+    <div ref="editor" class="editClass" style="text-align:left;opacity:0.7;"></div>
+    <button v-on:click="getContent">查看内容</button>
+    <el-button type="primary" @click="subTopic">发送</el-button>
+  </div>
+</template>
+
+<script>
+  import {
+    getAboutMessage,
+    checkTel,
+    submitTopic,
+    getOssMes
+  } from '@/api/table'
+  import {
+    getToken,
+    setToken,
+    removeToken
+  } from '@/utils/auth'
+  import {
+    isvalidPhone
+  } from "@/utils/validate";
+  import axios from 'axios';
+  import E from 'wangeditor'
+  import plugins from '@/components/Editor/plugins'
+  import toolbar from '@/components/Editor/toolbar'
+  var validPhone = (rule, value, callback) => {
+    if (!value) {
+      callback(new Error("请输入手机号码"));
+    } else if (!isvalidPhone(value)) {
+      callback(new Error("请输入正确的11位手机号码"));
+    } else {
+      callback();
+    }
+  };
+  export default {
+    data() {
+      return {
+        SubmitForm: {
+          TopicTitle: '', //标题
+          FocusUser: null, //关注人
+          FocusUserId: '',
+          TopicType: null, //类型
+          //关键字
+          KeyName: '',
+          IsHot: 0,
+          Score: 0, //分
+          Phone: '', //手机
+          TopicTypeId: '',
+          TopicContent: '', //内容
+          LinkTopicIds: null
+        },
+        checkedKeyword: [],
+        KeyName: '',
+        editor: '',
+        editorContent: '',
+        optionsConcernPeople: [], //关注人
+        checkedUrgency: false, //紧急
+        optionsTopic: [], //最近话题
+        recentName: [],
+        optionsTopicType: [{
+          value: '1',
+          label: '普通贴'
+        }, {
+          value: '2',
+          label: '私人贴'
+        }, {
+          value: '3',
+          label: '本公司公告贴'
+        }, {
+          value: '4',
+          label: '功能贴'
+        }, {
+          value: '5',
+          label: '程序更新'
+        }, {
+          value: '6',
+          label: '疑难解答'
+        }, {
+          value: '7',
+          label: '其他开发部公告贴'
+        }, ], //类型
+        keyWords: [], //关键字
+        fileList: [],
+        headersData: {
+          Authorization: 'Bearer ' + getToken()
+        },
+        common: {
+        },
+        ossFileForm: {
+          fileName: "",
+          sourceKey: "",
+          fileSize: "",
+          AttFileId: '',
+        },
+        Rules: {
+          Phone: [{
+              required: true,
+              validator: validPhone,
+              message: "手机号输入有误",
+              trigger: "change"
+            },
+            {
+              min: 11,
+              max: 11,
+              message: "长度在11个字符",
+              trigger: "blur"
+            }
+          ],
+          TopicTitle: [{
+              required: true,
+              message: "主题不能为空",
+              trigger: "blur"
+            },
+            {
+              min: 1,
+              max: 20,
+              message: "长度在 1 到 20 个字符",
+              trigger: "blur"
+            }
+          ],
+        }
+      }
+    },
+    created() {
+      // this.fetchData()
+      this.getValue();
+    },
+    methods: {
+      getContent: function() {
+        // alert(this.editorContent)
+        console.log(this.editorContent)
+      },
+      getValue() {
+        getAboutMessage().then(res => {
+          console.log(res)
+          if (res.Success == true) {
+            this.optionsConcernPeople = res.Data.FocusUser;
+            this.optionsTopic = res.Data.TopicList;
+            this.keyWords = res.Data.KeyNames;
+          }
+        })
+      },
+      checkPhone() {
+        // console.log(this.SubmitForm.Phone)
+        let checkForm = {};
+        checkForm.Phone = this.SubmitForm.Phone
+        checkTel(checkForm).then(res => {
+          console.log(res)
+        })
+      },
+      copyTopic() {
+        this.recentName = []
+        this.optionsTopic.forEach((element, index) => {
+          this.SubmitForm.LinkTopicIds.forEach((element2, index2) => {
+            if (element.TopicId == element2) {
+              this.recentName.push(element.TopicTitle)
+              this.editor.txt.append('<a href="/TopicSingle?topicId=' + element.TopicId + '">' + element.TopicTitle + '</a>')
+              this.editorContent += '<a href="/TopicSingle?topicId=' + element.TopicId + '">' + element.TopicTitle + '</a>'
+            }
+          });
+        });
+        // this.editor.txt.append('<p>'+this.recentName+'</p>')
+        // this.editorContent+='<p>'+this.recentName+'</p>'
+        // console.log(this.recentName)
+      },
+      // 最近帖子
+      changeSelect(event) {
+        // console.log(this.SubmitForm.LinkTopicIds)
+      },
+      //关注人
+      changeFocus(e) {
+        // console.log(e)
+        this.optionsConcernPeople.forEach(element => {
+          // console.log(element)
+          if (element.UserId == e) {
+            this.SubmitForm.FocusUser = element.UserName;
+            // console.log(this.SubmitForm.FocusUser)
+          }
+        });
+      },
+      //类型
+      changeType(e) {
+        // console.log(e)
+        this.optionsTopicType.forEach(element => {
+          // console.log(element)
+          if (element.value == e) {
+            this.SubmitForm.TopicType = element.label
+            // console.log(this.SubmitForm.TopicType)
+          }
+        });
+      },
+      //是否加急
+      changeHot(e) {
+        // console.log(e)
+        if (e == true) {
+          this.checkedUrgency = true;
+          this.SubmitForm.IsHot = 1;
+        } else {
+          this.checkedUrgency = false;
+          this.SubmitForm.IsHot = 0;
+        }
+        console.log(this.SubmitForm.IsHot)
+      },
+      //关键字
+      changeKeyname(e) {
+        console.log(this.KeyName)
+        if (this.KeyName != '') {
+          this.SubmitForm.KeyName = '';
+          let str = this.checkedKeyword.join(',')
+          this.SubmitForm.KeyName = this.KeyName + ',' + str;
+        } else {
+          let str = this.checkedKeyword.join(',')
+          this.SubmitForm.KeyName = str;
+        }
+        console.log(this.SubmitForm.KeyName)
+        //  console.log(e)
+      },
+      // addFileInfo(file){
+      //        this.editor.txt.append(`<a class="wscnph" title="点击下载" onclick='messagedown("${this.ossFileForm.AttFileId}","${file.name}")'> ${file.name} </a>`)
+      // },
+      //发帖
+      subTopic() {
+        this.SubmitForm.TopicContent = this.editorContent;
+        this.SubmitForm.KeyName = this.KeyName || this.checkedKeyword;
+        // console.log(this.SubmitForm.KeyName)
+        this.$refs['SubmitTopicForm'].validate(valid => {
+          if (valid) {
+            if (this.SubmitForm.TopicContent == '' || this.SubmitForm.TopicContent == null) {
+              this.$message({
+                message: '内容不能为空！',
+                type: "warning"
+              })
+            } else if (this.SubmitForm.KeyName == '') {
+              this.$message({
+                message: '关键字不能为空！',
+                type: "warning"
+              })
+            } else if (this.KeyName != '') {
+              if (this.checkedKeyword == '') {
+                this.SubmitForm.KeyName = this.KeyName
+              } else {
+                this.SubmitForm.KeyName = '';
+                let str = this.checkedKeyword.join(',')
+                this.SubmitForm.KeyName = this.KeyName + ',' + str;
+              }
+            } else {
+              let str = this.checkedKeyword.join(',')
+              this.SubmitForm.KeyName = str;
+            }
+            console.log(this.SubmitForm)
+            submitTopic(this.SubmitForm).then(res => {
+              console.log(res)
+            })
+          }
+        })
+      },
+      beforeUpload2(file) {
+        // console.log(file);
+        // this.fullscreenLoading = true;
+        if (file.type.indexOf("image") != -1) {
+          {
+            this.$message.error('只能选择文件类型！');
+            // this.fullscreenLoading = false;
+            return false;
+          }
+        }
+      },
+      //文件
+      handleRemove(file, fileList) {
+        console.log(file)
+        console.log(fileList)
+        //   this.handleClearUser()
+      },
+      // 上传之前的回调
+      beforeUpload(file) {
+        // console.log(file)
+        // this.addFileInfo(file)
+        //  this.editorContent += `<a class="wscnph" title="点击下载" onclick='messagedown("${this.ossFileForm.AttFileId}","${file.name}")'> ${file.name} </a>`
+        //  this.getOssMsg();
+        // this.TimeChange()
+        // this.common.name = file.name;
+        // this.common.key = this.common.dir + this.userId + this.TimeChange() + file.name;
+        // this.common.key = 'ETDDS/2019/'+this.common.name;
+    
+          this.common.key = this.common.dir + this.common.name;
+          this.ossFileForm.fileName = file.name;
+          this.ossFileForm.sourceKey = this.common.key;
+          // this.ossFileForm.fileSize = Math.round(file.size / 1024);
+          this.ossFileForm.fileSize = file.size;
+        
+      },
+      handleChange(file, fileList) {
+        // this.getOssMsg();//获取必要参数地址
+        let fileForm = {};
+        if (file.type.indexOf("image") != -1) {
+          {
+            this.$message.error('只能选择文件类型！');
+            // this.fullscreenLoading = false;
+            return false;
+          }
+        } else {
+          fileForm.fileName = file.name
+          getOssMes(fileForm).then(res => {
+            // console.log(res)
+            if (res.Success) {
+              let r = res.Data;
+              this.common.policy = res.Data.policy;
+              this.common.OSSAccessKeyId = res.Data.accessid;
+              this.common.name = res.Data.AttFileId + file.name.substring(file.name.indexOf("."), file.name.length);
+              this.common.success_action_status = "200";
+              this.common.signature = res.Data.signature;
+              this.common.region = res.Data.oshost;
+              this.ossFileForm.AttFileId = res.Data.AttFileId;
+              this.common.dir = res.Data.dir;
+              // this.$refs.upload.submit();
+            } else {
+              this.$message({
+                message: res.ErrMes,
+                type: "error"
+              })
+              this.fileList = [];
+            }
+          });
+        }
+      },
+      handleSubmit(row) {
+        // console.log(row)
+        //  row.action = this.common.region;
+        let formData = new FormData()
+        let config = {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+        formData.append('policy', this.common.policy)
+        formData.append('OSSAccessKeyId', this.common.OSSAccessKeyId)
+        formData.append('success_action_status', this.common.success_action_status)
+        formData.append('signature', this.common.signature)
+        formData.append('region', this.common.region)
+        formData.append('dir', this.common.dir)
+        formData.append('name', this.common.name)
+        formData.append('key', this.common.key)
+        formData.append('file', row.file)
+        this.$axios.post(this.common.region, formData, config).
+        then(res => {
+          // this.handleSuccess(res)
+          console.log(res)
+          onSuccess(res.data)
+          // console.log(this.fileList)
+          //  if (res.status == 200) {
+          //  this.editor.txt.append(`<a class="wscnph" title="点击下载" onclick='messagedown("${this.ossFileForm.AttFileId}","${this.ossFileForm.fileName}")'> ${this.ossFileForm.fileName} </a>`)
+          // this.$message({
+          //   message: "上传文件成功",
+          //   type: "success"
+          // });
+          // }
+        }).catch(res => {
+          row.onError()
+          // this.handleError(res)
+          //   this.$message({
+          //   message: "上传文件失败",
+          //   type: "error"
+          // });
+          console.log(res);
+        })
+      },
+      handleSuccess(response) {
+        console.log('handleSuccess')
+        // console.log(this.fileList)
+        // if (response.status == 200) {
+        //   this.$message({
+        //     message: "上传文件成功",
+        //     type: "success"
+        //   });
+        // }
+        // console.log(this.ossFileForm)
+        // postOssFile(this.ossFileForm).then(res => {
+        //   if (res.status == 200) {
+        //     this.$message({
+        //       message: "上传文件成功",
+        //       type: "success"
+        //     });
+        //     this.getInfo();
+        //     this.fileList = [];
+        //     // this.checkUser = [];
+        //     // this.$refs.cusTab.clearSelection()
+        //   } else {
+        //     this.$message({
+        //       message: "上传文件失败",
+        //       type: "error"
+        //     });
+        //   }
+        //   // fileList.splice(0, 1)
+        //   this.fileList = [];
+        // });
+        this.handleClearUser();
+      },
+      handleClearUser() {},
+      handleError(err) {
+        console.log('handleError')
+        // if (err) {
+        //   this.$message({
+        //     message: "上传文件失败",
+        //     type: "error"
+        //   });
+        // }
+      },
+      //获取文件后缀名
+      _splitExtension(name) {
+        let index = name.lastIndexOf('.')
+        let result = name.substring(index + 1, name.length)
+        return result
+      },
+    },
+    mounted() {
+      this.editor = new E(this.$refs.editor)
+      this.editor.customConfig.onchange = (html) => {
+        this.editorContent = html
+      }
+      this.editor.customConfig.uploadImgShowBase64 = true
+      this.editor.create()
+    },
+  }
+</script>
+
+<style rel="stylesheet/scss" lang="scss" scoped>
+  .topic_main {
+    width: 1200px;
+    margin: 30px auto;
+  }
+  .topic_head {
+    // margin-bottom: 20px;
+    min-width: 1200px;
+  }
+  .upload-container /deep/ .el-upload {
+    width: 10px !important;
+  }
+  .upload-container {
+    border: 1px solid #e0e0e0;
+    padding: 5px;
+    margin: 5px 0px;
+    background: #eef1f6; // height: 60px;
+    width: 100%;
+    display: flex;
+    justify-content: start; // align-items: top;
+    .editor-slide-upload {
+      display: flex;
+      align-content: center; // margin-bottom: 30px; // display: inline-block;
+      width: 100%; // margin-right: 20px;
+    }
+    .editor-slide-upload /deep/ .el-upload-list {
+      display: flex;
+      align-items: start;
+      display: -ms-inline-flexbox;
+      border: 0px solid #e0e0e0; //  padding: 0 5px;
+      margin-left: 5px; //  margin: 5px 0px; 
+      background: #eef1f6;
+      overflow-x: auto;
+      max-width: 87%; // height: 52px;
+      .el-upload-list__item-name {
+        color: #606266;
+        display: block;
+        margin-right: 40px;
+        margin-left: 5px; // overflow: hidden;
+        padding-left: 4px;
+        margin-top: -2px;
+        text-overflow: ellipsis;
+        -webkit-transition: color .3s;
+        transition: color .3s;
+        /* white-space: nowrap; */
+        /* display: inline-block; */
+        border: 1px solid #20a0ff;
+        border-radius: 5px;
+        /* margin: 5px 10px; */
+        /* text-align: center; */
+        padding: 0 5px;
+        /* padding-right: 10px; */
+      }
+      a {
+        display: inline-block;
+        border: 1px solid #20a0ff;
+        background-color: rgba(32, 160, 255, 0.1);
+        border-color: rgba(32, 160, 255, 0.2);
+        border-radius: 5px;
+        margin: 5px 10px;
+        text-align: center;
+        padding: 5px 0;
+        padding-right: 10px;
+      }
+    }
+    .editor-slide-upload /deep/ .el-upload-list li {
+      // border: 1px solid red;
+    }
+  }
+  .editor-slide-upload /deep/ .el-upload-list__item:first-child {
+    margin-top: 5px;
+  }
+   ::-webkit-scrollbar {
+    /*滚动条整体样式*/
+    width: 4px;
+    /*高宽分别对应横竖滚动条的尺寸*/
+    height: 4px;
+  }
+   ::-webkit-scrollbar-thumb {
+    /*滚动条里面小方块*/
+    border-radius: 5px;
+    -webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.2);
+  }
+   ::-webkit-scrollbar-track {
+    /*滚动条里面轨道*/
+    -webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+    border-radius: 0;
+    background: rgba(0, 0, 0, 0.1);
+  }
+  .upload-demo {
+    display: flex;
+    justify-content: start;
+    border: 1px solid #ddd;
+    width: 100%;
+    /* overflow: auto; */
+    border-radius: 5px;
+    padding: 0 10px;
+    line-height: 45px;
+  }
+  .upload-demo .submit_btn {
+    position: relative;
+    top: -2px;
+    margin: 10px;
+  }
+  .context-box {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    align-items: center;
+    margin: 0 auto;
+  }
+</style>
+

@@ -1,0 +1,251 @@
+<template>
+  <!-- Delevopment开发部公告 -->
+  <div class="delevopment-cantainer" >
+       <div class="fun-search">
+    <!-- <el-switch 
+  class="fun-swicth"
+  title="是否全文搜索"
+  v-model="value"
+  active-color="#13ce66"
+  inactive-color="#ff4949">
+</el-switch> -->
+ <el-checkbox class="fun-swicth" v-model="queryList.isAllContent">全文搜索</el-checkbox>
+      <el-input
+          class="search"
+          placeholder="请输入帖子标题或关键字"
+          suffix-icon="el-icon-search"
+          @keyup.enter.native="handleSearch"
+          v-model="queryList.queryStr"
+          title="按下回车键搜索"
+          auto-complete="off"
+         
+        ></el-input>
+        
+    </div>
+    <el-tabs type="border-card" v-model="CurrentTab" class="tabs" ref="tabs" >
+      <el-tab-pane label="程序更新" name="updateProgram" :disabled="tagDisabled" v-loading="listLoading">
+        <router-link
+          :class="{'board-item-box':true,'border-striped':index%2==0}"
+          :to="'/TopicSingle?topicId='+item.Id"
+          v-for="(item,index) in newTopicList"
+          :key="item.Id"
+          tag="a"
+          target="_blank"
+        >
+          <TopicItem :item="item" :flashTopic="getList"></TopicItem>
+        </router-link>
+        <noItem v-if="newTopicList.length==0"></noItem>
+      </el-tab-pane>
+      <el-tab-pane label="疑难解答" name="question" :disabled="tagDisabled" v-loading="listLoading">
+        <router-link
+          :class="{'board-item-box':true,'border-striped':index%2==0}"
+          :to="'/TopicSingle?topicId='+item.Id"
+          v-for="(item,index) in newTopicList"
+          tag="a"
+          target="_blank"
+          :key="item.Id"
+        >
+          <TopicItem :item="item" :flashTopic="getList"></TopicItem>
+        </router-link>
+        <noItem v-if="newTopicList.length==0"></noItem>
+      </el-tab-pane>
+      <el-tab-pane label="其他" name="other" :disabled="tagDisabled" v-loading="listLoading">
+        <router-link
+          :class="{'board-item-box':true,'border-striped':index%2==0}"
+          :to="'/TopicSingle?topicId='+item.Id"
+          v-for="(item,index) in newTopicList"
+          tag="a"
+          target="_blank"
+          :key="item.Id"
+        >
+          <TopicItem :item="item" :flashTopic="getList"></TopicItem>
+        </router-link>
+        <noItem v-if="newTopicList.length==0"></noItem>
+      </el-tab-pane>
+      <el-tab-pane label="搜索结果" v-if="showSeach == true" name="search" :disabled="tagDisabled" v-loading="listLoading">
+        <router-link
+          :class="{'board-item-box':true,'border-striped':index%2==0}"
+          :to="'/TopicSingle?topicId='+item.Id"
+          v-for="(item,index) in newTopicList"
+          :key="item.Id"
+          tag="a"
+          target="_blank"
+        >
+          <TopicItem :item="item" :flashTopic="getList"></TopicItem>
+        </router-link>
+        <noItem v-if="newTopicList.length==0"></noItem>
+      </el-tab-pane>
+    </el-tabs>
+    <!-- <el-pagination
+      class="page"
+      layout="total,sizes,prev, pager, next"
+      :current-page="queryList.pageIndex"
+      @size-change="handleSizeChange"
+      @current-change="handlePageChange"
+      :page-sizes="[10, 20, 30, 50]"
+      :total="total"
+    ></el-pagination>-->
+    <Pagination :total="total" :listQuery="queryList" @PageChange="getList" class="page"></Pagination>
+
+    <div class="clear"></div>
+  </div>
+</template>
+
+<script>
+import TopicItem from "@/components/TopicItem";
+import noItem from "@/components/NoItem";
+import { GetList } from "@/api/develope.js";
+import { formatTime, delHtmlTag } from "@/utils/index";
+import Pagination from "@/components/Pagination";
+
+export default {
+  components: {
+    TopicItem: TopicItem,
+    noItem,
+    Pagination
+  },
+  data() {
+    return {
+      newTopicList: [], //新话题的列表
+      total: 0, //总条数
+      CurrentTab: "updateProgram", //当前tab位置
+      queryList: {
+        pageIndex: 1, //当前页数
+        pageSize: 10, //一页显示的条数
+        group: 1,
+        queryStr:'',
+        isAllContent:false,
+
+      },
+      tagDisabled: false,
+      listLoading: false,
+      showSeach:false,
+    };
+  },
+  watch: {
+    CurrentTab(newValue, oldValue) {
+      let group = null;
+      if (newValue == "updateProgram") {
+        group = 1;
+        this.queryList.queryStr='';
+      } else if (newValue == "question") {
+        group = 2;
+         this.queryList.queryStr='';
+      } else if ((newValue == "other")) {
+        group = 0;
+        this.queryList.queryStr='';
+      }  else if ((newValue == "search")) {
+        group = 0;
+        this.queryList.queryStr = localStorage.getItem('queryStr');
+      }
+      else {
+        group = null;
+      }
+      this.ResetQueryList(group)
+        .then(res => {
+          if(group == -1){
+           return;
+          }
+          this.getList();
+        })
+        .catch(err => {
+          if (this.queryList.group == null) {
+            this.$message({
+              message: "状态错误",
+              type: "error"
+            });
+            return false;
+          }
+        });
+    }
+  },
+  created() {
+    // this.getList();
+  },
+  methods: {
+    getList() {
+      this.tagDisabled = true;
+      this.listLoading = true;
+      GetList(this.queryList).then(res => {
+        this.tagDisabled = false;
+        this.listLoading = false;
+        if (res.Success) {
+          this.newTopicList = res.Data.Rows;
+          this.total = res.Data.Total;
+        }
+      });
+    },
+    ResetQueryList(state) {
+      this.queryList.pageIndex = 1;
+      this.queryList.group = state;
+      return new Promise((resolve, reject) => {
+        if (state != null) {
+          resolve();
+        } else {
+          reject();
+        }
+      });
+    },
+    handleSearch(){
+      
+      if(this.queryList.queryStr){
+      this.showSeach = true;
+      this.CurrentTab ='search';
+      localStorage.setItem('queryStr',this.queryList.queryStr);
+      this.getList();
+      }else{
+        this.$message({
+        message: "请输入查询条件!",
+        type: "warning"
+      });
+      }
+      
+    },
+    handlePageChange(page) {
+      this.queryList.pageIndex = page;
+      this.getList();
+    },
+    handleSizeChange(val) {
+      this.queryList.pageSize = val;
+      this.queryList.pageIndex = 1;
+      this.getList();
+    },
+    onSubmit() {
+      this.$message("submit!");
+    },
+    onCancel() {
+      this.$message({
+        message: "cancel!",
+        type: "warning"
+      });
+    }
+  }
+};
+</script>
+<style lang="scss" scoped>
+.board-item-box {
+  height: 50px;
+  display: inline-block;
+  width: 100%;
+}
+.border-striped {
+  background: #ededed;
+}
+.delevopment-cantainer{
+  position: relative;
+}
+.fun-search{
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  z-index: 2;
+  width: 250px;
+}
+.fun-swicth{
+    position: absolute;
+    top: 9px;
+    width: 50px;
+    left: -90px;
+    // left: -41px;
+}
+</style>

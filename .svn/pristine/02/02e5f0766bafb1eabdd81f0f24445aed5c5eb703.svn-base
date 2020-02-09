@@ -1,0 +1,267 @@
+<template>
+   
+        <!-- 柱状图 -->
+        <div :class="className" :style="{height:height,width:width}">
+        </div>
+    
+</template>
+<script>
+    import echarts from 'echarts'
+    export default {
+        props: {
+            className: {
+                type: String,
+                default: 'chart'
+            },
+            id: {
+                type: String,
+                default: 'chart'
+            },
+            width: {
+                type: String,
+                default: '800px'
+            },
+            height: {
+                type: String,
+                default: '300px'
+            },
+            chartData: {
+                type: Array
+            }
+        },
+        data() {
+            return {
+                chart: null,
+                legend: [],
+                series: [],
+                array: [],
+                barname: [],
+                data: null,
+                watchBar: {},
+                barList: [],
+                barPost: [],
+                barRep: [],
+                myavPost:'',
+                myavRep:''
+            }
+        },
+        watch: {
+            chartData: {
+                deep: true,
+                handler(val) {
+                    // console.log(val)
+                    // this.watchBar = val;
+                    // var arry = this.watchBar;
+                    // this.barname = arry.fList[0].xVal;
+                    // this.array = arry.fList[0].yVal;
+                    // this.getPieChart(val);
+                    // this.initChart();
+                    //    console.log( val)
+                }
+            }
+        },
+        beforeDestroy() {
+            if (!this.chart) {
+                return
+            }
+            this.chart.dispose()
+            this.chart = null
+        },
+        created() {
+            // var arry = JSON.parse(localStorage.getItem('lineBChartData'))
+            // console.log(arry)
+            // this.$set(this.watchBar, 'rows', this.chartData)
+            //  this.$set(this.barList, 0, this.chartData.postCount)
+            //  console.log(this.watchBar.rows)
+            // this.getPieChart(this.chartData);
+        },
+        mounted() {
+            //加载饼形图数据
+            // 加载后台数据
+            //   this.search();
+            // var arry = JSON.parse(localStorage.getItem('chats'))
+            // var arry =this.watchBar;
+            // this.barname = arry.fList[0].xVal;
+            // this.array = arry.fList[0].yVal;
+            // this.initChart();
+        },
+        methods: {
+            getPieChart(val) {
+                // console.log(val)
+                let arry = JSON.parse(localStorage.getItem('lineBChartData')) // 回帖
+                //   console.log(this.watchBar.rows.postCount)
+                let postCountArry = []
+                val.map(((item, index) => {
+                    // postCountArry.push(Object.assign({}, {
+                    //     value: item.TopicCount,
+                    //     name: item.CompanyName.replace("（", "").replace("）", "").substring(0, 2)
+                    // }, ))
+                    if(index != 0){
+                    this.barPost.push(item.TopicCount) // 发帖
+                    // console.log(item)
+                    this.barname.push(item.CompanyName.replace("（", "").replace("）", "").substring(0, 2))
+                    }
+                 
+                }))
+                arry.Data.map(((item, index) => {
+                    // this.array.push(Object.assign({}, {
+                    //     value: item.TopicCount,
+                    //     name: item.CompanyName.replace("（", "").replace("）", "").substring(0, 2)
+                    // }, ))
+                    if(index != 0){
+                    this.barRep.push(item.TopicCount) //回帖
+                    }
+                   
+                }))
+                this.initMyChart(val);
+                this.initChart();
+            },
+            //记算布易科技
+            initMyChart(val){
+                let arry = JSON.parse(localStorage.getItem('lineBChartData')) // 回帖
+                this.myavPost =parseInt(val[0].TopicCount / val[0].PopleCount) 
+                this.myavRep = parseInt(arry.Data[0].TopicCount /  arry.Data[0].PopleCount) 
+                // console.log(this.myavPost)
+                // console.log(this.myavRep)
+                
+            },
+            initChart() {
+                // 基于准备好的dom，初始化echarts实例
+                this.chart = echarts.init(this.$el)
+                this.chart.setOption({
+                    title: {
+                        text: '布易科技人均发帖'+this.myavPost+"回帖"+this.myavRep,
+                        x: 'center'
+                    },
+                    symbol: 'triangle',
+                    symbolSize: 8,
+                    // color: ['#3398DB'],
+                    // color: function(params) {
+                    //     var colorList = [
+                    //         '#C1232B', '#3398DB', '#FCCE10', '#E87C25', '#27727B',
+                    //         '#FE8463', '#9BCA63', '#FAD860', '#F3A43B', '#60C0DD',
+                    //         '#D7504B', '#C6E579', '#F4E001', '#F0805A', '#26C0C0'
+                    //     ];
+                    //     return colorList[params.dataIndex]
+                    // },
+                    　
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: { // 坐标轴指示器，坐标轴触发有效
+                            type: 'shadow' // 默认为直线，可选为：'line' | 'shadow'
+                        },
+                    },
+                    legend: {
+                        orient: 'vertical',
+                        left: 'right',
+                        // data: this.barname
+                        data: ['发帖', '回帖']
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis: [{
+                        type: 'category',
+                        data: this.barname,
+                        axisTick: {
+                            alignWithLabel: true
+                        }
+                    }],
+                    yAxis: [{
+                        type: 'value'
+                    }],
+                    // series: [{
+                    //     name: '文件数',
+                    //     type: 'bar',
+                    //     barWidth: '60%',
+                    //     data: this.array,
+                    //     markLine: {
+                    //         data: [{
+                    //             name: '平均线',
+                    //             // 支持 'average', 'min', 'max'
+                    //             type: 'average',
+                    //         }, ],
+                    //         // 标签的样式在这里设置
+                    //         lineStyle: {
+                    //             color: 'red',
+                    //             width: 2,
+                    //             // type: "solid",
+                    //         },
+                    //         label: {
+                    //             normal: {
+                    //                 position: 'middle',
+                    //                 show: true,
+                    //                 formatter: '{b} : {c}' // 平均线的文字描述 b名称 c值
+                    //             }
+                    //         },
+                    //         //    formatter: '{b}: {d}'
+                    //     }
+                    // }],
+                    series: [{
+                            name: '发帖',
+                            type: 'bar',
+                            markLine: {
+                                data: [{
+                                    name: '平均线',
+                                    // 支持 'average', 'min', 'max'
+                                    type: 'average',
+                                }, ],
+                                // 标签的样式在这里设置
+                                lineStyle: {
+                                    color: 'red',
+                                    width: 2,
+                                    // type: "solid",
+                                },
+                                label: {
+                                    normal: {
+                                        position: 'middle',
+                                        show: true,
+                                        formatter: '{b} : {c}' // 平均线的文字描述 b名称 c值
+                                    }
+                                },
+                                //    formatter: '{b}: {d}'
+                            },
+                            data: this.barPost
+                        }, {
+                            name: '回帖',
+                            type: 'bar',
+                            markLine: {
+                                data: [{
+                                    name: '平均线',
+                                    // 支持 'average', 'min', 'max'
+                                    type: 'average',
+                                }, ],
+                                // 标签的样式在这里设置
+                                lineStyle: {
+                                    color: '#334B5C',
+                                    width: 2,
+                                    // type: "solid",
+                                },
+                                label: {
+                                    normal: {
+                                        position: 'middle',
+                                        show: true,
+                                        formatter: '{b} : {c}' // 平均线的文字描述 b名称 c值
+                                    }
+                                },
+                                //    formatter: '{b}: {d}'
+                            },
+                            data: this.barRep
+                        },
+                    ],
+                    barMaxWidth: '60',
+                    barCateGoryGap: '10%',
+                    // dataZoom: [{
+                    //     // 这个dataZoom组件，默认 控制x轴。
+                    //     type: "slider", // 这个 dataZoom 组件是 slider 型 dataZoom 组件
+                    //     start: 0, // 左边在 10% 的位置。
+                    //     end: 100 // 右边在 60% 的位置。
+                    // }],
+                })
+            },
+        }
+    }
+</script>

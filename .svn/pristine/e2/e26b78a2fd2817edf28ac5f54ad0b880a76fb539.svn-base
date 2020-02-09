@@ -1,0 +1,816 @@
+<template>
+  <div>
+    <!-- systemManager 系统管理-->
+    <el-card class="systemManager">
+      <el-tabs type="border-card" class="system-manager">
+        <el-tab-pane label="新增公司名称">
+          <div class="card-form">
+            <el-form
+              :rules="increaseCompanyRlues"
+              ref="increaseCompany"
+              :model="company"
+              label-width="80px"
+            >
+              <el-form-item label="公司名称" prop="companyName">
+                <el-input v-model="company.companyName"></el-input>
+              </el-form-item>
+              <el-form-item>
+                <el-button
+                  type="text"
+                  @click="()=>{allCompanyDialog=true;handleViewCompanyName()}"
+                >查看已有公司名</el-button>
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" @click="handleIncreaseCompany">添加</el-button>
+                <!-- <el-button>通过姓名获取用户的微信号</el-button> -->
+                <!-- <el-button>修复旧文件URL</el-button> -->
+              </el-form-item>
+            </el-form>
+          </div>
+        </el-tab-pane>
+        <el-tab-pane label="添加人员信息">
+          <div class="card-form">
+            <el-form
+              :model="addCompanyUser"
+              :rules="addCompanyUserRules"
+              ref="addCompanyUser"
+              label-position="right"
+              label-width="80px"
+            >
+              <el-form-item label="公司名称" prop="CompanyId">
+                <el-select
+                  v-model="addCompanyUser.CompanyId"
+                  @visible-change="handleViewCompanyName"
+                  @change="handleSelectCompany(addCompanyUser.CompanyId)"
+                >
+                  <el-option
+                    v-for="item in allCompanyName"
+                    :key="item.CompanyId"
+                    :label="item.CompanyName"
+                    :value="item.CompanyId"
+                  ></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="备注" prop="remark">
+                <el-input v-model="addCompanyUser.remark"></el-input>
+                <el-tooltip class="item" effect="light" content="若填写备注,则默认为客户" placement="right">
+                  <i class="el-icon-question"></i>
+                </el-tooltip>
+              </el-form-item>
+              <el-form-item label="姓名" prop="userName">
+                <el-tooltip class="item" effect="light" content="名称不能重复" placement="right">
+                  <el-input v-model="addCompanyUser.userName"></el-input>
+                </el-tooltip>
+              </el-form-item>
+              <el-form-item label="初始密码" prop="Pwd">
+                <el-input v-model="addCompanyUser.Pwd" type="password"></el-input>
+              </el-form-item>
+              <el-form-item label="微信号" prop="QQorPhone">
+                <el-input v-model="addCompanyUser.QQorPhone"></el-input>
+              </el-form-item>
+              <el-form-item label="角色" prop="Role">
+                <el-select v-model="addCompanyUser.Role" @change="handleChange" v-if="addCompanyUser.remark.trim()==''">
+                  <el-option label="服务" value="服务"></el-option>
+                  <el-option label="销售" value="销售"></el-option>
+                  <el-option label="客户" value="客户"></el-option>
+                </el-select>
+                <el-input v-model="addCompanyUser.Role" v-else readonly></el-input>
+              </el-form-item>
+              <el-form-item label="手机" prop="phone">
+                <el-input v-model="addCompanyUser.phone"></el-input>
+              </el-form-item>
+              <el-form-item>
+                <el-checkbox v-model="addCompanyUser.IsOpen" border label="对其他公司员工可见"></el-checkbox>
+              </el-form-item>
+              <el-form-item>
+                <el-button type="text" @click="handleViewUser">查看已有人员名</el-button>
+                <!-- <span class="tip">名称不能重复</span> -->
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" @click="handleIncreaseUser">添加</el-button>
+              </el-form-item>
+            </el-form>
+          </div>
+        </el-tab-pane>
+        <el-tab-pane label="添加关键字信息">
+          <div class="card-form">
+            <el-form label-width="80px">
+              <el-form-item label="关键词">
+                <el-input v-model="keyWord"></el-input>
+                <el-button type="text" @click="handleViewKeyWord">查看已有关键词</el-button>
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" @click="handleIncreaseKeyWord">添加</el-button>
+              </el-form-item>
+            </el-form>
+          </div>
+        </el-tab-pane>
+        <el-tab-pane label="删除以往帖子">
+          <div class="card-form">
+            <el-form>
+              <el-form-item label="日期">
+                <el-date-picker
+                  v-model="deleteDate"
+                  type="daterange"
+                  align="right"
+                  unlink-panels
+                  range-separator="-"
+                  start-placeholder="开始日期"
+                  end-placeholder="结束日期"
+                  :picker-options="pickerOptions"
+                ></el-date-picker>
+              </el-form-item>
+              <el-form-item>
+                <el-button style="margin-left:40px;" type="danger" @click="handleClickDeleteTopic">删除</el-button>
+              </el-form-item>
+            </el-form>
+          </div>
+        </el-tab-pane>
+        <el-tab-pane label="设置用户权限">
+          <div class="card-form">
+            <el-form label-width="120px">
+              <el-form-item label="发帖权限分">
+                <el-input v-model="scorePost"></el-input>
+              </el-form-item>
+              <el-form-item label="功能使用权限分">
+                <el-input v-model="limitScore"></el-input>
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" @click="handleSetUserPower">确认</el-button>
+                <p style="font-size:14px;color:#888;">(目前功能：收藏、脚印)</p>
+              </el-form-item>
+            </el-form>
+          </div>
+        </el-tab-pane>
+        <!-- <el-tab-pane label="更改管理员登录密码">
+          <div class="card-form">
+            <el-form>
+              <el-form-item label="原始密码">
+                <el-input></el-input>
+              </el-form-item>
+              <el-form-item label="新密码">
+                <el-input></el-input>
+              </el-form-item>
+              <el-form-item label="确认密码">
+                <el-button>确认</el-button>
+                <el-button>张工用的调试功能</el-button>
+              </el-form-item>
+            </el-form>
+          </div>
+        </el-tab-pane>-->
+      </el-tabs>
+    </el-card>
+    <el-dialog
+      title="已存在公司"
+      key="已存在公司"
+      append-to-body
+      :visible.sync="allCompanyDialog"
+      width="30%"
+      class="allCompany"
+      lock-scroll="fasle"
+    >
+      <el-table :data="allCompanyName" style="width: 100%">
+        <el-table-column prop="CompanyId" label="公司ID" width="120px;"></el-table-column>
+        <el-table-column prop="CompanyName" label="公司名称"></el-table-column>
+      </el-table>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="allCompanyDialog = false">确 定</el-button>
+      </span>
+    </el-dialog>
+    <el-dialog title="已存在关键词" class="allKeyWord" append-to-body :visible.sync="allKeyWordDialog" width="30%">
+      <el-table :data="allKeyWordArray" style="width: 100%">
+        <el-table-column prop="KeyId" label="关键词ID"></el-table-column>
+        <el-table-column prop="KeyName" label="关键词"></el-table-column>
+      </el-table>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="allKeyWordDialog = false">确 定</el-button>
+      </span>
+    </el-dialog>
+    <el-dialog class="allUserNameDialog" title="人员信息" append-to-body :visible.sync="allUserNameDialog" width="35%">
+      <el-tree
+        :data="allUserName"
+        :props="defaultProps"
+        :default-expand-all="true"
+        v-loading="loading"
+      >
+        <span class="custom-tree-node" slot-scope="{ node, data }">
+         <span class="custom-tree-node-titile">
+            <!-- <svg-icon ></svg-icon> -->
+            <svg-icon icon-class="company2" v-if="node.level==1"></svg-icon>
+           <span class="company-label">{{ node.label }}</span> 
+      
+         </span>
+          <span class="nodelevel2" v-if="node.level==2">
+            <el-input v-model="data.QQOrPhone" size="mini" style="width:150px"></el-input>
+            <el-select style="width:80px" v-model="data.Role" size="mini" >
+              <el-option value="服务" key="服务" label="服务">服务</el-option>
+              <el-option value="销售" key="销售" label="销售">销售</el-option>
+              <el-option value="客户" key="客户" label="客户">客户</el-option>
+            </el-select>
+            <el-switch active-color="#13ce66"
+            @change="handleOpen($event,data)"
+    inactive-color="#ff4949" v-model="data.isOpen" :active-value="1" title="是否对外开放" :inactive-value="0" size="mini"></el-switch>
+  <el-switch
+   
+    title="禁用或启用"
+    v-model="data.state"
+    active-color="#13ce66"
+    inactive-color="#ff4949"
+    :active-value="1"
+    :inactive-value="0"
+    @change="handleDeleteUser($event,data)">
+  </el-switch>
+         
+            <!-- <el-button
+              v-if="data.state==1"
+              type="danger"
+              size="mini"
+              @click="handleDeleteUser(data,'0')"
+            >禁用</el-button>
+            <el-button v-else type="success" size="mini" @click="handleDeleteUser(data,'1')">恢复</el-button> -->
+            <el-button type="primary" size="mini" @click="handleSureEditorState(data)">修改</el-button>
+            <span title="未登录时间"  v-if="data.state==1" class="lasttime">{{ data.LastLoginTime | LoginTime }}</span> 
+          </span>
+        </span>
+      </el-tree>
+      <span slot="footer" class="dialog-footer">
+        <!-- <el-button type="primary" @click="allUserNameDialog = false">确 定</el-button> -->
+      </span>
+    </el-dialog>
+  </div>
+</template>
+
+
+
+<script>
+import {
+  getallcompanyNames, //查看公司名
+  getallkeyNames, //查看已有关键词
+  getallusers, //查看所有所有人员信息
+  newcompany, //新增公司名称
+  addUser, //添加用户
+  addkeyname, //添加关键词
+  deletetimesolttopic, //删除以往帖子
+  setUserpower, //设置用户权限
+  getscore, //查看限制分
+  updateuser //更新用户
+} from "@/api/systemmanage";
+
+export default {
+  name: "systemManager",
+  data() {
+    var checkPhone = (rule, value, callback) => {
+      var TEL_REGEXP = /^1([38]\d|5[0-35-9]|7[3678])\d{8}$/;
+      // if(TEL_REGEXP.test(tel)){
+      //   callback()
+      // }else{
+      //     return callback(new Error('请输入正确手机号'));
+      // }
+      if (this.addCompanyUser.remark.trim() == "") {
+        if (TEL_REGEXP.test(value) || value == ""||value==undefined) {
+          callback();
+        } else {
+          return callback(new Error("请输入正确手机号"));
+        }
+      } else {
+        if (TEL_REGEXP.test(value)) {
+          callback();
+        } else {
+          return callback(new Error("请输入正确手机号"));
+        }
+      }
+    };
+    return {
+      pickerOptions: {
+        //日期选择
+        shortcuts: [
+          {
+            text: "最近一周",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+              picker.$emit("pick", [start, end]);
+            }
+          },
+          {
+            text: "最近一个月",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+              picker.$emit("pick", [start, end]);
+            }
+          },
+          {
+            text: "最近三个月",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 90);
+              picker.$emit("pick", [start, end]);
+            }
+          }
+        ]
+      },
+      company: {
+        companyName: ""
+      }, //公司名称
+      allCompanyName: [], //已有公司名称
+      addCompanyUser: {
+        IsOpen: false,
+        remark: "",
+        QQorPhone:"",
+        Role:""
+        
+      }, //添加公司人员信息
+      allCompanyDialog: false, //已有公司模态框
+      keyWord: "", //新建关键词
+      allKeyWordDialog: false, //已有关键词模态框
+      allKeyWordArray: [], //已有关键词
+      allUserNameDialog: false, //已有公司人员模态框
+      allUserName: [], //已有公司人员
+      defaultProps: {
+        children: "users",
+        label: "name"
+      },
+      /**添加公司规则 */
+      increaseCompanyRlues: {
+        companyName: [
+          { required: true, message: "请输入公司名", trigger: "blur" }
+        ]
+      },
+      /**添加公司人员规则 */
+      addCompanyUserRules: {
+        CompanyId: [
+          { required: true, message: "请输入公司名", trigger: "change" }
+        ],
+        userName: [{ required: true, message: "请输入姓名", trigger: "blur" }],
+        Pwd: [{ required: true, message: "请输入密码", trigger: "blur" }],
+        Role: [{ required: true, message: "请输入角色", trigger: "change" }],
+        phone: [{ validator: checkPhone, trigger: "blur" }]
+      },
+      deleteDate: "", //删除时间
+      scorePost: 0, //发帖权限分
+      limitScore: 0, //功能使用权限分
+      editorUserDialog: false, //编辑人员信息
+      currentUserState: {},
+      loading: false,
+      showRemark: false
+    };
+  },
+  mounted() {
+    getscore().then(res => {
+      if (res.Success) {
+        this.limitScore = res.Data.Rows.limitScore.trim();
+        this.scorePost = res.Data.Rows.limitScorePost.trim();
+      } else {
+        this.$message.warning(res.ErrMes);
+      }
+    });
+  },
+  beforeCreate() {
+    // console.log(this.$route)
+    if (this.$store.state.user.userinfo.Role !== "管理员") {
+      this.$router.push({ path: "/mytask/index" });
+    }
+  },
+  computed: {
+    remark() {
+      return this.addCompanyUser.remark;
+    }
+  },
+  watch: {
+    $route(to, from) {
+      // console.log(123123123)
+      // console.log(!this.$store.state.user)
+      // if(!this.$store.state.user.systemManagerAuth){
+      //   this.$router.push({name:form.name})
+      // }
+    },
+    remark(val) {
+      if (val.trim() != "") {
+        this.addCompanyUser.Role = "客户";
+      } else {
+        delete this.addCompanyUser.Role;
+      }
+    }
+  },
+   filters:{
+ TimeChange(row) {
+  var d = new Date(row);
+  var year = d.getFullYear();
+  var month = change(d.getMonth() + 1);
+  var day = change(d.getDate());
+  var hour = change(d.getHours());
+  var minute = change(d.getMinutes());
+  var second = change(d.getSeconds());
+  function change(t) {
+    if (t < 10) {
+      return "0" + t;
+    } else {
+      return t;
+    }
+  }
+  // var time = year + '-' + month + '-' + day + ' ' + hour + ':' + minute + ':' + second;
+   var time = year + '-' + month + '-' + day ;
+  return time
+},
+ LoginTime(time) {
+      const d = new Date(time);
+      const now = Date.now();
+      const diff = (now - d) / 1000;
+      if (diff < 30) {
+        return "刚刚";
+      } else if (diff < 3600) {
+        // less 1 hour
+        return Math.ceil(diff / 60) + "分钟前";
+      } else if (diff < 3600 * 24) {
+        return Math.ceil(diff / 3600) + "小时前";
+      } else if (diff < 3600 * 24 * 2) {
+        return "1天前";
+      } else {
+        return parseInt(diff / (3600 * 24)) + "天";
+      }
+      // else if(diff < 3600 * 24 * 7){
+      // return '1周前'
+      // }else if(diff < 3600 * 24 * 15){
+      // return '半个月前'
+      // }else if(diff < 3600 * 24 * 30){
+      // return '1个月前'
+      // }else if(diff < 3600 * 24 * 30 * 6){
+      // return '半年前'
+      // }else if(diff < 3600 * 24 * 30 * 12){
+      // return '1年前'
+      // }
+      // else if(diff < 3600 * 24 * 30 * 12 * 2){
+      // return '2年前'
+      // } else if(diff < 3600 * 24 * 30 * 12 * 3){
+      // return '3年前'
+      // }
+      {
+        // return d.getFullYear()+'/'+(d.getMonth() + 1) + '/' + d.getDate() + ' ' + d.getHours() + ':' + d.getMinutes()
+        // return dateFtt("yyyy-MM-dd hh:mm:ss", time)
+        let fmt = "yyyy-MM-dd hh:mm:ss";
+        return {
+          dateFtt(fmt, time) {
+            //author: meizz
+            const date = new Date(time);
+            var o = {
+              "M+": date.getMonth() + 1, //月份
+              "d+": date.getDate(), //日
+              "h+": date.getHours(), //小时
+              "m+": date.getMinutes(), //分
+              "s+": date.getSeconds(), //秒
+              "q+": Math.floor((date.getMonth() + 3) / 3), //季度
+              S: date.getMilliseconds() //毫秒
+            };
+            if (/(y+)/.test(fmt))
+              fmt = fmt.replace(
+                RegExp.$1,
+                (date.getFullYear() + "").substr(4 - RegExp.$1.length)
+              );
+            for (var k in o)
+              if (new RegExp("(" + k + ")").test(fmt))
+                fmt = fmt.replace(
+                  RegExp.$1,
+                  RegExp.$1.length == 1
+                    ? o[k]
+                    : ("00" + o[k]).substr(("" + o[k]).length)
+                );
+            return fmt;
+          }
+        };
+      }
+    }
+  
+  
+  },
+  methods: {
+    /**选择角色 */
+    handleChange(role) {
+      // console.log(role)
+      this.addCompanyUser.Role = role;
+    },
+    /**选择公司 */
+    handleSelectCompany(id) {
+      // console.log(id)
+      let company = this.allCompanyName.find(el => {
+        return el.CompanyId == id;
+      });
+      if (company.CompanyName == "布易企业用户") {
+        this.showRemark = true;
+        this.addCompanyUser.Role = "客户";
+      } else {
+        this.showRemark = false;
+      }
+    },
+    /**编辑信息 */
+    handleSureEditorState(data) {
+      // console.log(data);
+      updateuser(data).then(res => {
+        if (res.Success) {
+          this.$message.success("更新成功");
+        } else {
+          this.$message.warning(res.ErrMes);
+        }
+      });
+    },
+    //对外开发
+    handleOpen(state,data){
+         data.isOpen = state;
+      updateuser(data).then(res => {
+        if (res.Success) {
+          if (state == 1) {
+            this.$message.success("打开对外开放");
+          } else {
+            this.$message.success("关闭对外放");
+          }
+        } else {
+          this.$message.warning(res.ErrMes);
+        }
+      });
+    },
+    /**启用或禁用员工 */
+    handleDeleteUser( state,data) {
+      // console.log(data);
+      //  console.log(state);
+      data.state = state;
+      updateuser(data).then(res => {
+        if (res.Success) {
+          if (state == 0) {
+            this.$message.success("成功禁用");
+          } else {
+            this.$message.success("成功启用");
+          }
+        } else {
+          this.$message.warning(res.ErrMes);
+        }
+      });
+    },
+    /**设置用户权限 */
+    handleSetUserPower() {
+      if (this.limitScore !== "" && this.scorePost !== "") {
+        let limitScore = this.limitScore;
+        let scorePost = this.scorePost;
+        setUserpower({ limitScore, scorePost }).then(res => {
+          if (res.Success) {
+            this.$message.success("修改成功");
+          } else {
+            this.$message.warning(res.ErrMes);
+          }
+        });
+      }
+    },
+    /**删除以往帖子 */
+    handleClickDeleteTopic() {
+      let createTime =
+        new Date(this.deleteDate[0]).toLocaleDateString().replace(/\//g, "-") +
+        " 00:00:00";
+      let eTime =
+        new Date(this.deleteDate[1]).toLocaleDateString().replace(/\//g, "-") +
+        " 23:59:59";
+      deletetimesolttopic({ createTime, eTime }).then(res => {
+        if (res.Success) {
+          this.$message.success("删除成功");
+        } else {
+          this.$message.warning(res.ErrMes);
+        }
+      });
+    },
+    /**添加关键词 */
+    handleIncreaseKeyWord() {
+      if (this.keyWord != "" || this.keyWord != null) {
+        addkeyname({ keyName: this.keyWord }).then(res => {
+          if (res.Success) {
+            this.$message.success("添加成功");
+          } else {
+            this.$message.warning(res.ErrMes);
+          }
+        });
+      } else {
+        this.$message.warning("请输入关键词");
+      }
+    },
+    /**查看公司名 */
+    handleViewCompanyName() {
+      //   this.allCompanyDialog = true;
+      if (this.allCompanyName.length == 0) {
+        getallcompanyNames().then(res => {
+          if (res.Success) {
+            this.allCompanyName = res.Data.Rows;
+          } else {
+            this.$message.warning(res.ErrMes);
+          }
+        });
+      }
+    },
+    /**添加公司 */
+    handleIncreaseCompany() {
+      this.$refs.increaseCompany.validate(valid => {
+        if (valid) {
+          newcompany({ companyName: this.company.companyName }).then(res => {
+            if (res.Success) {
+              this.$message.success("添加成功");
+              this.company.companyName = "";
+            } else {
+              this.$message.warning(res.ErrMes);
+            }
+          });
+        }
+      });
+    },
+    /**查看已有关键词 */
+    handleViewKeyWord() {
+      this.allKeyWordDialog = true;
+      getallkeyNames().then(res => {
+        if (res.Success) {
+          this.allKeyWordArray = res.Data.Rows;
+        } else {
+          this.$message.warning(res.ErrMes);
+        }
+      });
+    },
+    /**查看已有人员 */
+    handleViewUser() {
+      this.allUserNameDialog = true;
+      this.loading = true;
+      getallusers().then(res => {
+       
+        if (res.Success) {
+           this.loading = false;
+          this.allUserName = res.Data.Rows.map(el => {
+            let obj = {};
+            obj.name = el.CompanyName;
+            obj.users = el.Users;
+            obj = { ...el, ...obj };
+            
+            return obj;
+          });
+          // console.log(this.allUserName);
+        } else {
+          this.$message.warning(res.ErrMes);
+        }
+      });
+    },
+    /**添加员工 */
+    handleIncreaseUser() {
+      this.$refs.addCompanyUser.validate(valid => {
+        if (valid) {
+          if(this.addCompanyUser.remark.trim()!=""){
+            this.addCompanyUser.Role = '客户'
+          }
+          addUser(this.addCompanyUser).then(res => {
+            if (res.Success) {
+              this.$message.success("添加成功");
+              this.addCompanyUser = {};
+            } else {
+              this.$message.warning(res.ErrMes);
+            }
+          });
+        }
+      });
+    }
+  }
+};
+</script>
+
+<style lang="scss" scoped>
+.card-form {
+  //   border: 1px solid red;
+  width: 600px;
+  margin: 0 auto;
+  background: #fff;
+  border: 1px solid #fff;
+  padding: 20px;
+  border-bottom: 15px;
+}
+.tip {
+  color: #888;
+  font-size: 12px;
+}
+.custom-tree-node {
+  // flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  padding-right: 8px;
+  button{
+    //  height: 24px ;
+    // line-height: 24px ;
+  }
+  .custom-tree-node-titile{
+    // color: black;
+    // background: #888
+
+  
+  }
+   
+}
+.company-label{
+ width: 50px;
+  display: inline-block
+}
+.el-tree-node.is-expanded>.el-tree-node__children {
+    display: block;
+    margin: 0 0 0 11px !important;
+}
+.custom-tree-node .el-input .el-input__inner {
+  width: 150px;
+}
+
+.custom-tree-node .el-select .el-input__inner {
+  width: 80px;
+}
+
+.el-tree-node__children .el-tree-node {
+  //  border:1px solid red;
+  height: 30px;
+}
+.el-tree-node__children .el-tree-node .el-tree-node__content {
+  height: 30px;
+  // padding-left: 25px !important;
+ 
+}
+.editorClass .el-input .el-input__inner {
+  width: 200px;
+}
+.custom-tree-node /deep/ .el-input--mini .el-input__inner
+{
+     height: 24px !important ;
+    line-height: 24px !important;
+}
+span.custom-tree-node {
+  // border:1px solid red;
+}
+.custom-tree-node /deep/.el-button--mini, .el-button--mini.is-round {
+    padding: 5px 15px;
+    /* width: 100px; */
+    height: 24px;
+    }
+.systemManager .el-form .el-input {
+  width: 300px;
+}
+
+.systemManager .el-form .el-input__inner {
+  width: 300px;
+  
+}
+
+
+ .allCompany /deep/ .el-dialog__body {
+    padding: 0px 20px !important;
+    color: #606266;
+    line-height: 24px;
+    font-size: 14px;
+  
+}
+ .allKeyWord /deep/ .el-dialog__body {
+    padding: 0px 20px !important;
+     
+    // border:1px solid red;
+}
+.lasttime{
+  margin-left: 13px;
+  width: 47px;
+  display: inline-block;
+}
+.nodelevel2{
+  margin-left: 90px;
+  button{
+    margin: 0;
+  }
+}
+.allUserNameDialog /deep/ .el-dialog {
+  //  width: 40%;
+   min-width: 690px;
+    // height: 800px;
+    // overflow-y: auto;
+    margin-top: 10vh !important;
+     
+}
+.allUserNameDialog /deep/ .el-dialog__body{
+  height: 800px;;
+    overflow-y: auto;
+   
+}
+//自定义的浏览器滚动条
+//   ::-webkit-scrollbar {
+//   width: 0.25rem;
+//   height: 0.25rem;
+//   background-image: linear-gradient(135deg, #1DE9B6 0%, rgba(8, 196, 219, 0.5) 72%, rgba(0, 182, 234, 0.3) 100%);
+// }
+// ::-webkit-scrollbar-track {
+//   border-radius: 0;
+// }
+// ::-webkit-scrollbar-thumb {
+//   border-radius: 0;
+//   background-image: linear-gradient(135deg, #1DE9B6 0%, #08c4db 72%, #057494 100%);
+//   transition: all .2s;
+//   border-radius: 0.25rem;
+// }
+// ::-webkit-scrollbar-thumb:hover {
+//   background-color: rgba(95, 95, 95, 0.7);
+// }
+</style>

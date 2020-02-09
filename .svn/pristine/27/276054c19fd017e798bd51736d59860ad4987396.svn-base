@@ -1,0 +1,19 @@
+import request from '@/utils/request'
+
+//获取新帖子
+export function GetNewTopic(data) {
+    return request({
+      url: '/Topic/GetNewTopic',
+      method: 'get',
+      params:data
+    })
+  }
+
+//删除帖子
+export function DeleteTopic(data) {
+  return request({
+    url: '/Topic/DeleteTopic',
+    method: 'post',
+    data
+  })
+}

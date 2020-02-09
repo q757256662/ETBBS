@@ -1,0 +1,66 @@
+import router from './router'
+import store from './store'
+import NProgress from 'nprogress' // Progress 进度条
+import 'nprogress/nprogress.css'// Progress 进度条样式
+import { Message } from 'element-ui'
+import { getToken } from '@/utils/auth' // 验权
+import Cookies from 'js-cookie'
+
+
+const whiteList = ['/login'] // 不重定向白名单
+router.beforeEach( (to, from, next) => {
+  NProgress.start()
+  if (getToken()) {
+    if (to.path === '/login') {
+      next({ path: '/' })
+      NProgress.done() // if current page is dashboard will not trigger	afterEach hook, so manually handle it
+    } else {
+      if (JSON.stringify(store.getters.userinfo) == "{}") {
+        store.dispatch('GetInfo').then(res => { // 拉取用户信息
+          let background = Cookies.get('background')
+          if(background==undefined){
+            store.dispatch('SetBackground','#EDEDED')
+          }else{
+            store.dispatch('SetBackground',background)
+          }
+          let role
+          if(!res.isCustomerUser){
+            if(res.info.company_Id==1){
+              role = 1 //布易人员
+            }else{
+              role = 2 //非布易人员
+            }
+          }else{
+            //客户模式
+            role = -1
+            
+          }
+          // const accessRoutes = await store.dispatch('permission/generateRoutes', role)
+          // console.log(accessRoutes)
+          // router.addRoutes(accessRoutes)
+
+          next()
+        }).catch((err) => {
+          console.log(err)
+          store.dispatch('FedLogOut').then(() => {
+            Message.error(err || 'Verification failed, please login again')
+            next({ path: '/' })
+          })
+        })
+      } else {
+        next()
+      }
+    }
+  } else {
+    if (whiteList.indexOf(to.path) !== -1) {
+      next()
+    } else {
+      next('/login')
+      NProgress.done()
+    }
+  }
+})
+
+router.afterEach(() => {
+  NProgress.done() // 结束Progress
+})

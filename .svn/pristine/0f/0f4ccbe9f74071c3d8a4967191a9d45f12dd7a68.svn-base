@@ -1,0 +1,9 @@
+import request from '@/utils/request'
+
+export function GetContents(data) {
+    return request({
+      url: '/Topic/GetContents',
+      method: 'get',
+      params:data
+    })
+  }

@@ -1,0 +1,216 @@
+<template>
+  <div :class="['wrapper',{'isFixed':searchBarFixed}]" id="searchBar">
+    <el-menu
+      :default-active="currentRoute"
+      class="el-menu-vertical-demo"
+      v-if="!user.userinfo.isCustomerUser"
+    >
+      <router-link to="/standardSubmit/index">
+        <el-menu-item index="standardSubmit">
+          <svg-icon icon-class="editor"></svg-icon>
+          <span>发帖提问</span>
+        </el-menu-item>
+      </router-link>
+      <router-link
+        :to="route.path+'/'+route.children[0].path"
+        v-for="(route,index) in routes"
+        :key="route.path"
+      >
+        <el-menu-item
+          v-if="!route.hidden&&route.children.length!=0"
+
+          :index="route.children[0].name"
+         
+        >
+          <svg-icon :icon-class="route.children[0].meta.icon"></svg-icon>
+          <span>{{route.children[0].meta.title}}</span>
+          <el-badge
+            :value="dot[index]"
+            class="dot"
+            :hidden="!route.children[0].meta.dot"
+            v-if="dot[index]!=0"
+          ></el-badge>
+        </el-menu-item>
+      </router-link>
+      <el-menu-item
+        v-if="user.userinfo.Role=='管理员'"
+        index="systemManager"
+        @click="handleClickSystem"
+      >
+        <svg-icon icon-class="setting"></svg-icon>
+        <span>系统管理</span>
+      </el-menu-item>
+    </el-menu>
+  </div>
+</template>
+
+<script>
+// import SidebarItem from "./SidebarItem"
+import Cookies from "js-cookie"; //获取当前帖子停留状态
+import { mapState } from "vuex";
+import { authentication } from "@/api/systemmanage";
+
+export default {
+  name: "Sticky",
+  data() {
+    return {
+      searchBarFixed: false,
+      currentRoute: "",
+      dot: []
+    };
+  },
+  computed: {
+    routes() {
+      this.currentRoute = this.$router.currentRoute.name;
+      return this.$router.options.routes.filter(el => {
+        if(el.path=="/statistics"){
+          return this.user.userinfo.CompanyName=="（开发）深圳市布易科技有限公司"
+        }
+        return !el.hidden && el.children && el.children.length != 0;
+      });
+    },
+    ...mapState({
+      user: state => state.user,
+      // menu:state=>state.permission.addRoutes
+    })
+  },
+  watch: {
+    $route(val) {
+      this.currentState = Cookies.get("currentState");
+    }
+  },
+  updated() {
+  },
+  created() {
+    // console.log(this.$router)
+    // this.handleGetNewPulic();
+  },
+  mounted() {
+    window.addEventListener("scroll", this.handleScroll);
+  },
+  beforeDestroy() {
+    window.removeEventListener("scroll", this.handleScroll);
+    if (this.interval) {
+      clearInterval(this.interval);
+    }
+  },
+  methods: {
+    handleScroll() {
+      let scrollTop =
+        window.pageYOffset ||
+        document.documentElement.scrollTop ||
+        document.body.scrollTop;
+      let offsetTop = document.querySelector("#searchBar").offsetTop;
+      this.searchBarFixed = scrollTop > offsetTop - 60;
+    },
+    /**系统管理 */
+    handleClickSystem() {
+      this.$prompt("请输入管理员登录密码", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        inputType: "password"
+      })
+        .then(({ value }) => {
+          authentication({ PassWord: value }).then(res => {
+            if (res.Success) {
+              this.$router.push({ name: "systemManager" });
+              this.$store.commit("SET_SYSTEMMANAGERAUTH", true);
+            } else {
+              this.$message.warning(res.ErrMes);
+            }
+          });
+        })
+        .catch(err => {});
+    },
+  }
+};
+</script>
+<style lang="scss">
+.isFixed {
+  position: fixed;
+  background-color: #fff;
+  z-index: 999;
+  margin-left: 930px;
+  margin-top: -20px;
+}
+.wrapper {
+  width: 130px;
+  /* height: 200px; */
+  background: #ededed;
+  // position: relative;
+  // left: -4%;
+}
+
+.GlobalWrite {
+  border: 1px solid #ccc;
+  background: #fff;
+  box-shadow: 1px 1px 5px #ddd;
+}
+
+.GlobalWrite-nav {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  /* box-shadow: 2px 2px 5px #ddd; */
+}
+
+.GlobalWrite-navItem {
+  /* width:100px; */
+  display: inline-block;
+  text-align: center;
+  margin: 23px;
+  cursor: pointer;
+  color: #444;
+}
+
+.GlobalWrite-navItem p {
+  margin-top: 10px;
+}
+
+.GlobalWrite-draft {
+  // border-top: 1px solid #ccc;
+  text-align: left;
+  font-size: 15px;
+  color: #8590a6;
+  padding: 15px 20px;
+  margin: 2px 0;
+}
+
+.GlobalWrite-draft:hover {
+  background: #eee;
+  cursor: pointer;
+}
+
+.GlobalSideBar-navList {
+  border: 1px solid #ccc;
+  padding: 8px 0;
+  margin-top: 10px;
+  background: #fff;
+}
+
+.GlobalSideBar-navList ul li {
+  padding: 10px 20px;
+  font-size: 14px;
+  color: #444;
+}
+
+.GlobalSideBar-navList ul li:hover {
+  background: #eee;
+  cursor: pointer;
+}
+.active {
+  // border:1px solid red;
+  background: #eee;
+}
+
+.el-menu-vertical-demo {
+  border: 1px solid #ccc;
+  position: fixed;
+}
+.dot {
+  right: 3px;
+}
+#searchBar .el-menu-item {
+  width: 150px;
+}
+</style>

@@ -1,0 +1,260 @@
+<template>
+  <div :class="['wrapper',{'isFixed':searchBarFixed}]" id="searchBar">
+    <!-- <div class="GlobalWrite">
+      <div class="GlobalWrite-nav">
+        <router-link class="GlobalWrite-navItem" to="/mytask/index">
+          <svg-icon icon-class="topic"></svg-icon>
+          <p :class="{'activeTop':$route.name=='mytask'}">我的话题</p>
+        </router-link>
+        <router-link class="GlobalWrite-navItem" to="/oldtopic/index">
+          <svg-icon icon-class="topic"></svg-icon>
+          <p :class="{'activeTop':$route.name=='oldtopic'}">旧话题</p>
+        </router-link>
+        <router-link class="GlobalWrite-navItem" to="/TopicList/index">
+          <svg-icon icon-class="query"></svg-icon>
+          <p :class="{'activeTop':$route.name=='TopicList'}">话题查询</p>
+        </router-link>
+      </div>
+      <div :class="{'active':$route.name=='mytask'&&currentState=='draft','GlobalWrite-draft':true}" @click="handleRouteDraft">
+        <svg-icon icon-class="draft"></svg-icon>
+        <span>我的草稿</span>
+      </div>
+      <div :class="{'active':$route.name=='mynotice','GlobalWrite-draft':true}"  @click="handleRouteNotice">
+        <svg-icon icon-class="notice"></svg-icon>
+        <span>我的公告</span>
+      </div>
+    </div>
+    <div class="GlobalSideBar-navList">
+      <ul>
+        <li @click="handleClickSystem" v-if="user.userinfo.Role=='管理员'" :class="{'active':$route.name=='systemManager'}">
+          <svg-icon icon-class="setting"></svg-icon>
+          <span>系统管理</span>
+        </li>
+        <router-link to="/MyCollections/index">
+          <li :class="{'active':$route.name=='MyCollections'}">
+            <svg-icon icon-class="collection"></svg-icon>
+            <span>我的收藏</span>
+          </li>
+        </router-link>
+        <router-link to="/FunctionTopic/index">
+          <li :class="{'active':$route.name=='FunctionTopic'}">
+            <svg-icon icon-class="function"></svg-icon>
+            <span>功能目录</span>
+          </li>
+        </router-link>
+        <router-link to="/statistics/index">
+          <li :class="{'active':$route.name=='statistics'}">
+            <svg-icon icon-class="static"></svg-icon>
+            <span>统计信息</span>
+          </li>
+        </router-link>
+        <router-link to="/PublicTopic/index">
+          <li :class="{'active':$route.name=='PublicTopic'}">
+            <svg-icon icon-class="notice"></svg-icon>
+            <span>本公司公告</span>
+          </li>
+        </router-link>
+        <router-link to="/Delevopment/index">
+          <li :class="{'active':$route.name=='Delevopment'}">
+            <svg-icon icon-class="notice"></svg-icon>
+            <span>开发部公告</span>
+          </li>
+        </router-link>
+      </ul>
+    </div>-->
+    <el-menu :default-active="currentRoute" class="el-menu-vertical-demo">
+      <router-link to="/submitTopic/index">
+        <el-menu-item
+          index="submitTopic"
+        >
+          <svg-icon icon-class="editor"></svg-icon>
+          <span>发帖提问</span>
+        </el-menu-item>
+      </router-link>
+      <router-link
+        :to="route.path+'/'+route.children[0].path"
+        v-for="route in routes"
+        :key="route.path"
+      >
+        <el-menu-item
+          :index="route.children[0].name"
+        >
+          <svg-icon :icon-class="route.children[0].meta.icon"></svg-icon>
+          <span>{{route.children[0].meta.title}}</span>
+          <span>{{route.name}}</span>
+        </el-menu-item>
+      </router-link>
+      <el-menu-item
+          index="systemManager"
+          @click="handleClickSystem"
+        >
+          <svg-icon icon-class="setting"></svg-icon>
+          <span>系统管理</span>
+        </el-menu-item>
+    </el-menu>
+  </div>
+</template>
+
+<script>
+// import SidebarItem from "./SidebarItem";
+import Cookies from "js-cookie"; //获取当前帖子停留状态
+import { mapState } from "vuex";
+import { authentication } from "@/api/systemmanage";
+
+export default {
+  name: "Sticky",
+  data() {
+    return {
+      searchBarFixed: false,
+      currentRoute: ""
+    };
+  },
+  computed: {
+    routes() {
+      this.currentRoute = this.$router.currentRoute.name
+      // console.log(this.$router.currentRoute)
+      // console.log(this.$router.options.routes)
+      return this.$router.options.routes.filter(el=>{
+        return !el.hidden&&el.children&&el.children.length!=0
+      })
+    },
+    ...mapState({
+      user: state => state.user
+    })
+  },
+  watch: {
+    $route(val) {
+      // console.log(val)
+      this.currentState = Cookies.get("currentState");
+    }
+  },
+  updated() {},
+  mounted() {
+    window.addEventListener("scroll", this.handleScroll);
+  },
+  beforeDestroy() {
+    window.removeEventListener("scroll", this.handleScroll);
+    if (this.interval) {
+      clearInterval(this.interval);
+    }
+  },
+  methods: {
+    handleScroll() {
+      let scrollTop =
+        window.pageYOffset ||
+        document.documentElement.scrollTop ||
+        document.body.scrollTop;
+      let offsetTop = document.querySelector("#searchBar").offsetTop;
+      // console.log(offsetTop);
+      this.searchBarFixed = scrollTop > offsetTop - 60;
+    },
+    /**系统管理 */
+    handleClickSystem() {
+      this.$prompt("请输入管理员登录密码", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        inputType: "password"
+      })
+        .then(({ value }) => {
+          authentication({ PassWord: value }).then(res => {
+            if (res.Success) {
+              this.$router.push({ name: "systemManager" });
+              this.$store.commit("SET_SYSTEMMANAGERAUTH", true);
+            } else {
+              this.$message.warning(res.ErrMes);
+            }
+          });
+          // this.$router.push({name:'systemManager'})
+        })
+        .catch(err => {});
+    }
+  }
+};
+</script>
+<style lang="scss">
+.isFixed {
+  position: fixed;
+  background-color: #fff;
+  z-index: 999;
+  margin-left: 930px;
+  margin-top: -20px;
+}
+.wrapper {
+    width: 130px;
+    /* height: 200px; */
+    background: #f6f6f6;
+    // position: relative;
+    // left: -4%;
+}
+
+.GlobalWrite {
+  border: 1px solid #ccc;
+  background: #fff;
+  box-shadow: 1px 1px 5px #ddd;
+}
+
+.GlobalWrite-nav {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  /* box-shadow: 2px 2px 5px #ddd; */
+}
+
+.GlobalWrite-navItem {
+  /* width:100px; */
+  display: inline-block;
+  text-align: center;
+  margin: 23px;
+  cursor: pointer;
+  color: #444;
+}
+
+.GlobalWrite-navItem p {
+  margin-top: 10px;
+}
+
+.GlobalWrite-draft {
+  // border-top: 1px solid #ccc;
+  text-align: left;
+  font-size: 15px;
+  color: #8590a6;
+  padding: 15px 20px;
+  margin: 2px 0;
+}
+
+.GlobalWrite-draft:hover {
+  background: #eee;
+  cursor: pointer;
+}
+
+.GlobalSideBar-navList {
+  border: 1px solid #ccc;
+  padding: 8px 0;
+  margin-top: 10px;
+  background: #fff;
+}
+
+.GlobalSideBar-navList ul li {
+  padding: 10px 20px;
+  font-size: 14px;
+  color: #444;
+}
+
+.GlobalSideBar-navList ul li:hover {
+  background: #eee;
+  cursor: pointer;
+}
+.active {
+  // border:1px solid red;
+  background: #eee;
+}
+
+.activeTop {
+  // color:#ccc;
+  // background:#eee;
+}
+.el-menu-vertical-demo {
+  border: 1px solid #ccc;
+  position: fixed;
+}
+</style>

@@ -1,0 +1,271 @@
+<template>
+  <div class="nav">
+    <div class="nav_left">
+      <router-link to="/mytask/index">
+        <img src="./logo.png" alt="logo" class="header_logo" />
+      </router-link>
+      <span class="bbs-title">论坛</span>
+    </div>
+    <el-collapse-transition>
+      <div v-show="isShowTitle" class="topic_title">{{topicTitle}}</div>
+    </el-collapse-transition>
+    <div class="nav_right">
+      <!-- <span>
+        <el-input
+          :class="{'expend':searchExpend}"
+          placeholder="请输入关键词"
+          suffix-icon="el-icon-search"
+          @keyup.enter.native="handleSearch"
+          @focus="handleFocusInput"
+          @blur="handleBlurInput"
+          v-model="searchKey"
+          v-show="showSearch"
+          auto-complete="off"
+          size="small"
+        ></el-input>
+      </span> -->
+      <!-- <el-tag>{{this.$store.state.user.userinfo.Role}}-{{this.$store.state.user.userinfo.name}}</el-tag> -->
+      <div >
+        <!-- <img src="../../../assets/imgs/user.jpg" alt="" class="user-avator"> -->
+        <el-dropdown trigger="click">
+          <!-- <img src="../../../assets/imgs/user.jpg" alt class="user-avator" /> -->
+          <el-tag>
+            {{userinfo.CompanyName+":"+userinfo.name}}
+          </el-tag>
+          <!-- <p
+            class="avator-color"
+            :style="{background:onSelectColor(name)}"
+          >{{name.substring(0,1)}}</p> -->
+          <el-dropdown-menu slot="dropdown">
+            <!-- <router-link to="/dashboard">
+              <el-dropdown-item>
+                <span>个人信息</span>
+              </el-dropdown-item>
+            </router-link> -->
+            <el-dropdown-item>
+              <span @click="$router.push('/dashboard')" type="text">个人信息</span>
+            </el-dropdown-item>
+            <el-dropdown-item>
+              <span @click="handleExit()" type="text">退出账号</span>
+            </el-dropdown-item>
+          </el-dropdown-menu>
+        </el-dropdown>
+        <!-- <li>个人信息</li> -->
+        <!-- <router-link to="/dashboard">
+          <el-button type="text">个人信息</el-button>
+        </router-link>-->
+        <!-- <li>在线人数</li> -->
+      </div>
+      <!-- <el-button size="small" type="primary" @click="handleCRouteSubmitTopic" :class="{'disappear':searchExpend}">发帖</el-button> -->
+    </div>
+  </div>
+</template>
+
+
+
+<script>
+// import Media from 'vue-media'
+import { mapState, mapGetters } from "vuex";
+
+export default {
+  data() {
+    return {
+      // m: $.media,
+      searchText: "",
+      isShowTitle: false,
+      searchKey: "", //关键词
+      searchExpend: false, //搜索框是否扩展
+      colorBox: [ //颜色选项
+        "#FB966E",
+        "#FF9999",
+        "#99CC33",
+        "#FF9900",
+        "#FF0033",
+        "#FF8000",
+        "#00AEAE",
+        "#0066CC",
+        "#8C8C00",
+        "#8080C0",
+        "#804040",
+        "#8F4586",
+        "#00EC00"
+      ],
+    };
+  },
+  computed: {
+    ...mapState(["config"]),
+    ...mapGetters(["isAboutPageEnable", "isSearchEnable"]),
+    ...mapState("user", ["userData", "unread"]),
+    ...mapGetters("user", ["isSiteAdmin"]),
+    ...mapState({
+      topicTitle: state => state.user.topicTitle,
+      userinfo:state=>state.user.userinfo
+    }),
+    showSearch() {
+      return this.$route.name !== "TopicList";
+    }
+  },
+  mounted() {
+    // console.log(this.userinfo)
+  },
+  watch: {
+    topicTitle(state) {
+      if (state != "") {
+        this.isShowTitle = true;
+      } else {
+        this.isShowTitle = false;
+      }
+    }
+  },
+  methods: {
+    /**选择颜色 */
+    onSelectColor(name) {
+      if (name != undefined) {
+        return this.colorBox[name.charCodeAt(0) % 13];
+      }
+    },
+    /**发帖 */
+    handleCRouteSubmitTopic() {
+      this.$router.push("/submitTopic/index");
+    },
+    /**搜索帖子 */
+    handleSearch() {
+      // this.searchKey
+      this.$router.push({
+        name: "TopicList",
+        params: { topicDetail: this.searchKey }
+      });
+    },
+    doSearch: function() {
+      // if (!this.searchText) return
+      this.$router.push({
+        name: "search",
+        query: {
+          q: this.searchText.trim()
+        }
+      });
+    },
+    /**聚焦输入框 */
+    handleFocusInput() {
+      // console.log(123);
+      this.searchExpend = true
+    },
+    /**失去焦点输入框 */
+    handleBlurInput() {
+      // console.log(234);
+      this.searchExpend = false
+
+    },
+    //退出登录
+    handleExit() {
+      this.$store.dispatch("LogOut").then(() => {
+        location.reload(); // 为了重新实例化vue-router对象 避免bug
+      });
+    }
+  }
+  // components: {
+  //     Media
+  // }
+};
+</script>
+
+
+<style lang="scss" scoped>
+
+.bbs-title{
+  display: inline-block;
+  width:200px;
+}
+.nav {
+  height: 100%;
+  z-index: 10000;
+  display: flex;
+  justify-content: space-between;
+  width: 1400px;
+  margin: 0 auto;
+}
+
+.nav_left {
+  width: 250px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+      margin-left: 13px;
+}
+
+.nav_right {
+  width: 500px;
+  // display: flex;
+  // justify-content: space-between;
+  // align-items: center;
+  // width: 600px;
+}
+
+.nav_right .el-input {
+  width: 300px;
+  float: left;
+}
+
+.nav_right > div {
+  display: inline-block;
+  float: right;
+}
+
+.nav_right button {
+  // list-style: none;
+  // display: flex;
+  // align-items: center;
+  margin-left: 20px;
+  float:left;
+  margin-top:13px;
+  // margin-right:94px;
+}
+
+.nav_left span {
+  font-size: 20px;
+}
+
+.header_logo {
+  // background: url("./logo.png");
+  vertical-align: middle;
+  height: 35px;
+}
+
+.topic_title {
+  font-size: 28px;
+  width: 800px;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.user-avator {
+  width: 30px;
+  height: 30px;
+  vertical-align: middle;
+  cursor: pointer;
+  margin-top:-7px;
+}
+.expend {
+  width: 350px !important;
+  transition: width 0.5s;
+  -moz-transition: width 0.5s; /* Firefox 4 */
+  -webkit-transition: width 0.5s; /* Safari 和 Chrome */
+  -o-transition: width 0.5s; /* Opera */
+}
+.disappear {
+  display: none;
+}
+.avator-color{
+  width: 35px;
+  height: 35px;
+  line-height: 35px;
+  text-align: center;
+  vertical-align: bottom;
+  border-radius: 5px;
+  color: #fff;
+  opacity: 0.6;
+  cursor: pointer;
+  font-size:18px;
+}
+</style>

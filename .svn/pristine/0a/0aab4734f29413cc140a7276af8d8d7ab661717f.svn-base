@@ -1,0 +1,21 @@
+import request from '@/utils/request'
+//帖子方法api
+//获取内容贴
+export function GetContents(data) {
+    return request({
+      url: '/Topic/GetContents',
+      method: 'get',
+      params:data
+    })
+  }
+
+
+  //标记已读贴
+
+  export function topicState(data) {
+    return request({
+      url: '/Concern/TopicState',
+      method: 'post',
+      data:data
+    })
+  }

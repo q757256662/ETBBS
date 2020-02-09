@@ -1,0 +1,473 @@
+<template>
+  <div class="mytask-container">
+    <el-tabs type="border-card" v-model="CurrentTab" class="tabs" ref="tabs">
+      <el-tab-pane label="新话题" name="NewTopic">
+        <router-link class="board-item-box" :to="'/TopicSingle?topicId='+item.Id+'&topicState='+1" v-for="item in newTopicList" :key="item.Id">
+          <div class="board-item">
+            <div class="title-recent">
+              <div class="avatar" :style="{background:item.Color}">
+                <!-- <img src="http://szcert.ebs.org.cn/Images/govIcon.gif" alt=""> -->
+                {{item.CreateName.substring(0,1) }}
+              </div>
+              <div class="right">
+                <h2>
+                  <p class="title" :title="item.FirstContent">
+                    {{item.Title}}
+                  </p>
+                  <p class="topic-info">
+                    <router-link class="author" to="/">
+                      {{item.CreateName}}
+                    </router-link>
+                    <span class="time">
+                              {{item.CreateTime}}
+                        </span>
+                    <span class="keyFiles">
+                        <i class="block" :style="{background:item.Color}"></i> {{item.KeyFileIds}}
+                        </span>
+                  </p>
+                </h2>
+              </div>
+              <span class="icons">
+                        <!-- icon专用 TODO -->
+                      </span>
+              <div class="append-icons">
+                <!-- icon专用 TODO -->
+              </div>
+            </div>
+            <div class="detail">
+              <div class="count-block">
+                <div class="count">
+                  <p class="num">{{item.ReplyCount}}</p>
+                  <p class="txt">回复</p>
+                </div>
+              </div>
+              <div class="recent">
+                <span class="line" :style="{borderLeft: `4px solid ${item.Color}`}"></span>
+                <div class="post">
+                  <span>
+                      <p>
+                        <i class="icon icarus icon-reply"></i>
+                         {{item.Reply.name}}
+                      </p>
+                      <p class="content" v-text="item.Reply.contents" :title="item.Reply.contents">
+                        <!-- content -->
+                      </p>
+                      </span>
+                </div>
+                <div class="time">
+                  {{item.Reply.time}}
+                </div>
+              </div>
+            </div>
+          </div>
+        </router-link>
+      </el-tab-pane>
+      <el-tab-pane label="待解决" name="NeedSolved">
+        <router-link class="board-item-box" :to="'/TopicSingle?topicId='+item.Id+'&topicState='+2" v-for="item in newTopicList" :key="item.id">
+          <div class="board-item">
+            <div class="title-recent">
+              <div class="avatar" :style="{background:item.Color}">
+                <!-- <img src="http://szcert.ebs.org.cn/Images/govIcon.gif" alt=""> -->
+                {{item.CreateName.substring(0,1) }}
+              </div>
+              <div class="right">
+                <h2>
+                  <p class="title" :title="item.FirstContent">
+                    {{item.Title}}
+                  </p>
+                  <p class="topic-info">
+                    <router-link class="author" to="/">
+                      {{item.CreateName}}
+                    </router-link>
+                    <span class="time">
+                              {{item.CreateTime}}
+                        </span>
+                    <span class="keyFiles">
+                        <i class="block" :style="{background:item.Color}"></i> {{item.KeyFileIds}}
+                        </span>
+                  </p>
+                </h2>
+              </div>
+              <span class="icons">
+                        <!-- icon专用 TODO -->
+                      </span>
+              <div class="append-icons">
+                <!-- icon专用 TODO -->
+              </div>
+            </div>
+            <div class="detail">
+              <div class="count-block">
+                <div class="count">
+                  <p class="num">{{item.ReplyCount}}</p>
+                  <p class="txt">回复</p>
+                </div>
+              </div>
+              <div class="recent">
+                <span class="line" :style="{borderLeft: `4px solid ${item.Color}`}"></span>
+                <div class="post">
+                  <span>
+                      <p>
+                        <i class="icon icarus icon-reply"></i>
+                         {{item.Reply.name}}
+                      </p>
+                      <p class="content" v-text="item.Reply.contents" :title="item.Reply.contents">
+                        <!-- content -->
+                      </p>
+                      </span>
+                </div>
+                <div class="time">
+                  {{item.Reply.time}}
+                </div>
+              </div>
+            </div>
+          </div>
+        </router-link>
+      </el-tab-pane>
+      <el-tab-pane label="旧话题" name="OldTopic">
+    <router-link class="board-item-box" :to="'/TopicSingle?topicId='+item.Id+'&topicState='+3" v-for="item in newTopicList" :key="item.Id">
+          <div class="board-item">
+            <div class="title-recent">
+              <div class="avatar" :style="{background:item.Color}">
+                <!-- <img src="http://szcert.ebs.org.cn/Images/govIcon.gif" alt=""> -->
+                {{item.CreateName.substring(0,1) }}
+              </div>
+              <div class="right">
+                <h2>
+                  <p class="title" :title="item.FirstContent">
+                    {{item.Title}}
+                  </p>
+                  <p class="topic-info">
+                    <router-link class="author" to="/">
+                      {{item.CreateName}}
+                    </router-link>
+                    <span class="time">
+                              {{item.CreateTime}}
+                        </span>
+                    <span class="keyFiles">
+                        <i class="block" :style="{background:item.Color}"></i> {{item.KeyFileIds}}
+                        </span>
+                  </p>
+                </h2>
+              </div>
+              <span class="icons">
+                        <!-- icon专用 TODO -->
+                      </span>
+              <div class="append-icons">
+                <!-- icon专用 TODO -->
+              </div>
+            </div>
+            <div class="detail">
+              <div class="count-block">
+                <div class="count">
+                  <p class="num">{{item.ReplyCount}}</p>
+                  <p class="txt">回复</p>
+                </div>
+              </div>
+              <div class="recent">
+                <span class="line" :style="{borderLeft: `4px solid ${item.Color}`}"></span>
+                <div class="post">
+                  <span>
+                      <p>
+                        <i class="icon icarus icon-reply"></i>
+                         {{item.Reply.name}}
+                      </p>
+                      <p class="content" v-text="item.Reply.contents" :title="item.Reply.contents">
+                        <!-- content -->
+                      </p>
+                      </span>
+                </div>
+                <div class="time">
+                  {{item.Reply.time}}
+                </div>
+              </div>
+            </div>
+          </div>
+        </router-link>
+
+
+      </el-tab-pane>
+      <el-tab-pane label="草稿帖" name="draft">草稿帖</el-tab-pane>
+    </el-tabs>
+    <el-pagination class="page" layout="total,sizes,prev, pager, next" :current-page="queryList.pageIndex" @size-change="handleSizeChange" @current-change="handlePageChange" :page-sizes="[10, 20, 30, 50]" :total="total">
+    </el-pagination>
+  </div>
+</template>
+<script>
+  import {
+    GetNewTopic
+  } from '@/api/mytask.js';
+  import {
+    formatTime,
+    delHtmlTag
+  } from '@/utils/index'
+  export default {
+    name: 'mytask',
+    data() {
+      return {
+        //查询条件
+        queryList: {
+          pageIndex: 1, //当前页数
+          pageSize: 10, //一页显示的条数
+          state: 1,
+          trackId: this.$store.state.user.userinfo.id //搜索ID
+        },
+        CurrentTab: 'NewTopic', //当前tab位置
+        newTopicList: [], //新话题的列表
+        total: 0, //总条数
+        colorBox: {
+          "ULSG打推": "#FB966E",
+          "ET打推": "rgb(64, 158, 255)",
+          "Bag打推": "#FF9999",
+          "排料": "#99CC33",
+          "绘图仪和切割机": "#FF9900",
+          "网络睿排": "rgb(239, 191, 0)",
+          "版本发布": "#FF0033",
+          "ETPS": "#FF9966",
+          "裁床": "#FF9966",
+          "功能操作说明": "#FF9966"
+        }
+      }
+    },
+    methods: {
+      handlePageChange(page) {
+        this.queryList.pageIndex = page;
+        this.getList();
+      },
+      handleSizeChange(val) {
+        this.queryList.pageSize = val;
+        this.queryList.pageIndex = 1;
+        this.getList();
+      },
+      //获取列表
+      getList() {
+        GetNewTopic(this.queryList).then(res => {
+          if (res.Success) {
+            this.newTopicList = res.Data.Rows.map(el => {
+              el.CreateTime = formatTime(res.Data.Rows[0].CreateTime, false)
+              // console.log( el.CreateTime)
+              el.Reply.time = formatTime(el.Reply.time)
+              el.Reply.contents = delHtmlTag(el.Reply.contents)
+              el.KeyFileIds = el.KeyFileIds.substring(0, el.KeyFileIds.length - 1)
+              let colorBox = el.KeyFileIds.split(',');
+              el.Color = this.colorBox[colorBox[0]]
+              el.FirstContent = delHtmlTag(el.FirstContent)
+              return el
+            });
+
+            this.total = res.Data.Total;
+          }
+        })
+      },
+      ResetQueryList(state) {
+        this.queryList.pageIndex = 1;
+        this.queryList.state = state;
+        return new Promise((resolve, reject) => {
+          if (state != null) {
+            resolve()
+          } else {
+            reject()
+          }
+        })
+      }
+    },
+    created() {
+      this.getList();
+    },
+    mounted () {
+      // this.$refs.tabs.$el.children[0].style="position:fixed"
+      // console.log(this.$refs.tabs.$el.children[0])
+    },
+    watch: {
+      CurrentTab(newValue, oldValue) {
+        let state = null;
+        if (newValue == 'NewTopic') {
+          state = 1
+        } else if (newValue == 'NeedSolved') {
+          state = 2
+        } else if(newValue = 'OldTopic'){
+            state = 3
+        }
+        else {
+          state = null
+        }
+        this.ResetQueryList(state).then(res => {
+          this.getList();
+        }).catch(err => {
+          if (this.queryList.state == null) {
+            this.$message({
+              message: "状态错误",
+              type: "error"
+            })
+            return false;
+          }
+        })
+      }
+    }
+  }
+</script>
+
+
+<style rel="stylesheet/scss" lang="scss" scoped>
+  .mytask {
+    &-text {
+      font-size: 30px;
+      line-height: 46px;
+    }
+  }
+  .board-item-box {
+    // border:1px solid red;
+    display: block;
+    width: 100%;
+    height: 100px;
+    border-radius: 10px;
+    padding: 5px;
+    box-sizing: border-box;
+  }
+  .board-item-box:hover {
+    background: #e5effa;
+  }
+  .board-item {
+    display: flex;
+    height: 100%;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .title {
+    color: #495057;
+    font-size: 0.8em;
+    margin: 10px 0;
+    white-space: nowrap;
+    /* 不换行 */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    width: 600px;
+  }
+  .title-recent {
+    display: flex;
+    width: 50%;
+    height: 100%;
+    align-items: center;
+    min-width: 700px;
+  }
+  .title-recent .avatar {
+    display: block;
+    height: 32px;
+    min-width: 32px;
+    font-size: 20px;
+    text-align: center;
+    line-height: 28px;
+    color: #fff;
+    border-radius: 5px;
+    box-sizing: border-box;
+    opacity: .6;
+  }
+  .title-recent .avatar img {
+    // max-height:50px;
+    // max-width:50px;
+    height: 100%;
+    width: 100%;
+  }
+  .title-recent .right {
+    margin-left: 10px;
+  }
+  .title-recent .right h2 p {
+    margin: 10px 0;
+    font-size: 18px;
+  }
+  .title-recent .right .topic-info {
+    font-size: 15px;
+    width: 500px;
+  }
+  .title-recent .right .topic-info .author {
+    display: inline-block;
+    color: #337ab7;
+    width: 70px;
+  }
+  .title-recent .right .topic-info .time {
+    margin-left: 10px;
+    width: 130px;
+  }
+  .title-recent .right .keyFiles {
+    font-size: 14px;
+    margin-left: 10px;
+    color: #343a40;
+  }
+  .detail {
+    display: flex;
+    align-items: center;
+    width: 50%;
+    height: 100%;
+    justify-content: space-between;
+  }
+  .detail .count-block {
+    width: 100px;
+    text-align: center;
+  }
+  .detail .count {
+    margin-left: 20px;
+    display: inline-block;
+    text-align: center;
+  }
+  .detail .count .num {
+    font-size: 20px;
+    color: #aaa;
+  }
+  .detail .count .txt {
+    font-size: 15px;
+    color: #ccc;
+    margin-top: 25px;
+  }
+  .line {
+    // border-left: 4px solid #ccc;
+    height: 85%;
+    padding-left: 0;
+    opacity: .6;
+  }
+  .detail .recent {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    min-width: 300px;
+    height: 100%;
+    box-sizing: border-box;
+    margin-left: 50px;
+  }
+  .recent .post {
+    height: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0 20px;
+    padding: 8px 0;
+    font-size: 15px;
+  }
+  .recent .post .content {
+    font-size: 0.8em;
+    color: #aaa;
+    margin: 10px 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box; //作为弹性伸缩盒子模型显示。
+    -webkit-box-orient: vertical; //设置伸缩盒子的子元素排列方式--从上到下垂直排列
+    -webkit-line-clamp: 2; //显示的行
+    width: 450px;
+  }
+  .time {
+    color: #888;
+    font-size: 12px;
+    width: 200px; // float: right;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .block {
+    height: 10px;
+    width: 10px;
+    display: inline-block;
+    opacity: 0.6;
+  }
+  .page {
+    text-align: center;
+    margin-top: 20px;
+  }
+</style>

@@ -1,0 +1,172 @@
+<template>
+    <div class="topic-count">
+        <div class="FCountPie">
+            <line-chart :chart-data="lineChartData"></line-chart>
+        </div>
+        <div class="FCountPie">
+            <line-marker :chart-data="lineFChartData"></line-marker>
+        </div>
+        <div class="FCountPie">
+            <line-marker1 :chart-data="lineHChartData"></line-marker1>
+        </div>
+        <div class="FCountPie">
+            <line-marker2 :chart-data="lineBChartData"></line-marker2>
+        </div>
+        <div class="chart-table">
+            <el-table :data="tableData"  :row-class-name="tableRowClassName" style="width: 100%" max-height="450">
+                <el-table-column fixed prop="UserName" label="用户" width="150">
+                </el-table-column>
+                <el-table-column prop="CompanyName" label="公司名">
+                </el-table-column>
+                <el-table-column prop="PostCount" label="发帖" width="120">
+                </el-table-column>
+                <el-table-column prop="RepCount" label="回帖" width="120">
+                </el-table-column>
+                <el-table-column prop="ToBeCount" label="未处理" width="300">
+                </el-table-column>
+                <el-table-column prop="NewTopicCount" label="未查看" width="120">
+                </el-table-column>
+            </el-table>
+        </div>
+    </div>
+</template>
+<style>
+  .el-table .warning-row {
+    background: oldlace;
+  }
+
+  .el-table .success-row {
+    background: #f0f9eb;
+  }
+</style>
+<script>
+    import {
+        GetTopicCount,
+        GetPostCount,
+        GetReplyCount,
+        GetAverageCount
+    } from '@/api/Charts'
+    import lineMarker from '@/components/Charts/FtopicCountPie.vue' //发帖
+    import lineMarker1 from '@/components/Charts/HtopicCountPie.vue' //回帖
+    import lineMarker2 from '@/components/Charts/topicCountBar.vue' //柱图
+    import LineChart from '@/components/Charts/topicCountPie.vue' //总贴数饼图
+    export default {
+        components: {
+            lineMarker,
+            lineMarker1,
+            lineMarker2,
+            LineChart,
+        },
+        data() {
+            return {
+                lineChartData: null, //总数
+                lineFChartData: null, //发帖
+                lineHChartData: null, //回帖
+                lineBChartData: [], //柱状图平均
+                loadingChart: true,
+                tableData: null
+            }
+        },
+        created() {
+            console.log(this.$store.state.user.userinfo.name)
+            this.getList()
+            this.getFList()
+            this.getHList()
+            this.getAList()
+            // this.getBarList()
+        },
+        methods: {
+            //总数
+            getList() {
+                GetTopicCount().then(res => {
+                    // console.log(res)
+                    if (res.Success == true) {
+                        this.lineChartData = res;
+                        this.loadingChart = false;
+                        // console.log(res)
+                        localStorage.setItem('lineChartData', JSON.stringify(res))
+                    } else {
+                        this.$message({
+                            showClose: true,
+                            message: res.tip,
+                            type: 'error'
+                        });
+                        this.loadingChart = false;
+                    }
+                })
+            },
+            //发帖
+            getFList() {
+                GetPostCount().then(res => {
+                    // console.log(res)
+                    if (res.Success == true) {
+                        this.lineFChartData = res;
+                        this.lineBChartData = res.Data;
+                        this.loadingChart = false;
+                        // console.log(res)
+                        localStorage.setItem('lineFChartData', JSON.stringify(res))
+                    } else {
+                        this.$message({
+                            showClose: true,
+                            message: res.tip,
+                            type: 'error'
+                        });
+                        this.loadingChart = false;
+                    }
+                })
+            },
+            //回帖
+            getHList() {
+                GetReplyCount().then(res => {
+                    // console.log(res)
+                    if (res.Success == true) {
+                        this.lineHChartData = res;
+                        // this.lineBChartData.repCount = res;
+                        this.loadingChart = false;
+                        // console.log(res)
+                        localStorage.setItem('lineBChartData', JSON.stringify(res))
+                        localStorage.setItem('lineHChartData', JSON.stringify(res))
+                    } else {
+                        this.$message({
+                            showClose: true,
+                            message: res.tip,
+                            type: 'error'
+                        });
+                        this.loadingChart = false;
+                    }
+                })
+            },
+            getAList() {
+                GetAverageCount().then(res => {
+                    console.log(res)
+                    if (res.Success == true) {
+                        this.tableData = res.Data;
+                        this.loadingChart = false;
+                        // console.log(res)
+                    } else {
+                        this.$message({
+                            showClose: true,
+                            message: res.tip,
+                            type: 'error'
+                        });
+                        this.loadingChart = false;
+                    }
+                })
+            },
+      tableRowClassName({row, rowIndex}) {
+        //   console.log(row.UserName)
+        if (row.UserName == this.$store.state.user.userinfo.name) {
+          return 'success-row';
+        } else{
+        return '';
+        }
+       
+      }
+        }
+    }
+</script>
+<style rel="stylesheet/scss" lang="scss" scoped>
+  .el-table .success-row {
+    background-color: "red" !important;
+  }
+</style>

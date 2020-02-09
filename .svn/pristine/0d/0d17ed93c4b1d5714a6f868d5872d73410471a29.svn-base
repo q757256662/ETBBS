@@ -1,0 +1,65 @@
+<template>
+  <div class="app-main">
+    <!-- <router-view :key="key"></router-view> -->
+    <!-- <el-card> -->
+      <router-view class="contain-main"></router-view>
+    <!-- </el-card> -->
+    <Sticky class="Sticky"></Sticky>
+    <el-tooltip placement="top" content="回到顶部">
+      <back-to-top
+        :custom-style="myBackToTopStyle"
+        :visibility-height="300"
+        :back-position="0"
+        transition-name="fade"
+      />
+    </el-tooltip>
+  </div>
+</template>
+
+<script>
+import BackToTop from "@/components/BackToTop";
+import Sticky from "./Sticky";
+
+export default {
+  name: "AppMain",
+  data() {
+    return {
+      myBackToTopStyle: {
+        right: "50px",
+        bottom: "50px",
+        width: "40px",
+        height: "40px",
+        borderRadius: "4px",
+        lineHeight: "45px", // 请保持与高度一致以垂直居中
+        background: "#e7eaf1" // 按钮的背景颜色
+      }
+    };
+  },
+  components: {
+    BackToTop,
+    Sticky
+  },
+  computed: {
+    key() {
+      return this.$route.name !== undefined
+        ? this.$route.name + +new Date()
+        : this.$route + +new Date();
+    }
+  }
+};
+</script>
+<style lang="scss">
+.app-main {
+  width:1100px;
+  margin:0 auto;
+  // display: flex;
+  // justify-content: space-between;
+}
+.Sticky{
+  float: right;
+}
+.contain-main{
+  width:900px;
+  float: left;
+}
+</style>

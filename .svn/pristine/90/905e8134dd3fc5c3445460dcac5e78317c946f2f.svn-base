@@ -1,0 +1,63 @@
+<template>
+  <div class="topic_main">
+    <el-input class="topic_head" placeholder="主题"></el-input>
+    <el-form :inline="true">
+      <el-form-item label="指明关注人">
+        <el-select v-model="SubmitForm.ConcernPeople" placeholder="指明关注人">
+          <el-option label="区域一" value="shanghai"></el-option>
+          <el-option label="区域二" value="beijing"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="帖子类型">
+        <el-select v-model="SubmitForm.ConcernPeople" placeholder="帖子类型">
+          <el-option label="区域一" value="shanghai"></el-option>
+          <el-option label="区域二" value="beijing"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="限制分">
+        <el-input></el-input>
+      </el-form-item>
+      <el-form-item label="相关师傅手机号">
+        <el-input></el-input>
+      </el-form-item>
+      <el-form-item label="关键词">
+        <el-checkbox-group >
+          <el-checkbox label="打板" name="type"></el-checkbox>
+        </el-checkbox-group>
+      </el-form-item>
+    </el-form>
+    <editor></editor>
+  </div>
+</template>
+
+<script>
+  import Editor from '@/components/Editor'
+  export default {
+    components: {
+      Editor
+    },
+    data() {
+      return {
+        SubmitForm: {
+          ConcernPeople: null //关注人
+        }
+      }
+    },
+    created() {
+      // this.fetchData()
+    },
+    methods: {
+    }
+  }
+</script>
+
+<style>
+  .topic_main {
+    width: 1200px;
+    margin: 30px auto;
+  }
+  .topic_head {
+    margin-bottom: 20px;
+  }
+</style>
+

@@ -1,0 +1,194 @@
+<template>
+  <el-card class="dashboard-container">
+    <!-- dashboard 个人信息 -->
+    <h3 style="text-align:center;margin-bottom:20px;font-weight:600">个人信息</h3>
+    <el-form
+      :model="userMessage"
+      ref="updateUser"
+      label-width="100px"
+      class="form_box"
+      :rules="rules"
+    >
+      <el-form-item label="用户姓名" prop="name">
+        <el-input v-model="userMessage.name" readonly :disabled="banModify"></el-input>
+      </el-form-item>
+      <el-form-item label="用户密码" prop="password">
+        <!-- <el-input></el-input> -->
+        <el-button type="text" @click="putPasswordDialog = true" >修改密码</el-button>
+      </el-form-item>
+      <el-form-item label="邮箱地址" prop="mail">
+        <el-input v-model="userMessage.mail" :disabled="banModify"></el-input>
+      </el-form-item>
+      <el-form-item label="微信账号" prop="QQOrPhone">
+        <el-tooltip class="item" effect="light" content="如更换微信号,请与开发部联系,在企业号后台修改" placement="right">
+          <el-input v-model="userMessage.QQOrPhone" readonly :disabled="banModify"></el-input>
+        </el-tooltip>
+      </el-form-item>
+      <el-form-item label="MAC地址" prop="Mac">
+        <el-input v-model="userMessage.Mac" :disabled="banModify"></el-input>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="handleSumbitForm">{{banModify?'修改':'确认'}}</el-button>
+        <el-button @click="handleSumbitCancel" v-if="!banModify">取消</el-button>
+
+        <!-- <el-button @click="resetForm('ruleForm')">重置</el-button> -->
+      </el-form-item>
+    </el-form>
+    <el-dialog v-dialogDrag  title="提示" append-to-body :visible.sync="putPasswordDialog" width="30%">
+      <el-form :model="userPassword" :rules="passwordRules" ref="userPassword">
+        <el-form-item label="原始密码" prop="oldPwd">
+          <el-input v-model="userPassword.oldPwd" type="password"></el-input>
+        </el-form-item>
+        <el-form-item label="新密码" prop="pwdOne">
+          <el-input v-model="userPassword.pwdOne" type="password"></el-input>
+        </el-form-item>
+        <el-form-item label="确认密码" prop="pwdTwo">
+          <el-input v-model="userPassword.pwdTwo" type="password"></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="putPasswordDialog = false">取 消</el-button>
+        <el-button type="primary" @click="handlePutPwd">确 定</el-button>
+      </span>
+    </el-dialog>
+  </el-card>
+</template>
+
+<script>
+import { mapGetters, mapState } from "vuex";
+import { updateUser, updatePwd } from "@/api/dashboard.js";
+
+export default {
+  name: "dashboard",
+  computed: {
+    ...mapGetters(["name", "roles"]),
+    ...mapState({
+      user: state => state.user
+    })
+  },
+  created() {
+    this.initData();
+  },
+  data() {
+    var validatePass2 = (rule, value, callback) => {
+      if (value === "") {
+        callback(new Error("请再次输入密码"));
+      } else if (value !== this.userPassword.pwdOne) {
+        callback(new Error("两次输入密码不一致!"));
+      } else {
+        callback();
+      }
+    };
+    return {
+      userMessage: {}, //用户信息
+      userPassword: {}, //修改密码
+      putPasswordDialog: false, //修改密码模态框
+      rules: {
+        mail: [
+          { required: true, message: "请输入邮箱", trigger: "blur" },
+          {
+            type: "email",
+            message: "请输入正确的邮箱地址",
+            trigger: ["blur", "change"]
+          }
+        ],
+        Mac: [{ required: true, message: "请输入Mac地址", trigger: "blur" }]
+      },
+      passwordRules: {
+        oldPwd: [
+          { required: true, message: "请输入原始密码", trigger: "blur" }
+        ],
+        pwdOne: [{ required: true, message: "请输入新密码", trigger: "blur" }],
+        pwdTwo: [{ validator: validatePass2, trigger: "blur" }]
+      },
+      banModify: true
+    };
+  },
+  methods: {
+    /**修改用户密码 */
+    handlePutPwd() {
+      this.$refs.userPassword.validate(valid => {
+        if (valid) {
+          //验证通过
+          updatePwd(this.userPassword).then(res => {
+            if (res.Success) {
+              this.$message.success(修改成功);
+              setTimeout(() => {
+                this.handleExit();
+              }, 1000);
+            } else {
+              this.$message.warning(res.ErrMes);
+            }
+          });
+        }
+      });
+    },
+    /**修改用户信息 */
+    handleSumbitForm() {
+      if (this.banModify) {
+        /**进入修改状态 */
+        this.banModify = false;
+      } else {
+        // console.log(this.userMessage);
+        this.$refs.updateUser.validate(valid => {
+          if (valid) {
+            let obj = {};
+            obj.email = this.userMessage.mail;
+            obj.mac = this.userMessage.Mac;
+            updateUser(obj).then(res => {
+              // console.log(res);
+              if(res.Success){
+                this.$message.success("修改成功")
+                this.banModify = true
+              }else{
+                this.$message.warning(res.ErrMes)
+              }
+            });
+          }
+        });
+
+        /**提交状态 */
+      }
+    },
+    /**取消修改用户信息 */
+    handleSumbitCancel() {
+      this.userMessage = { ...this.user.userinfo };
+      this.banModify = true;
+    },
+    /**初始化数据 */
+    initData() {
+      // console.log(this.user);
+      this.userMessage = { ...this.user.userinfo };
+    },
+    /**退出登录 */
+    handleExit() {
+      this.$store.dispatch("LogOut").then(() => {
+        location.reload(); // 为了重新实例化vue-router对象 避免bug
+      });
+    }
+  }
+};
+</script>
+
+<style rel="stylesheet/scss" lang="scss" scoped>
+.dashboard {
+  &-container {
+    // width: 500px;
+    // margin-left:400px;
+    // margin: 50px auto 0px;
+    // background:#efefef;
+    // text-align: center;
+  }
+  &-text {
+    font-size: 30px;
+    line-height: 46px;
+  }
+}
+.form_box {
+  // border:1px solid red;
+  width: 400px;
+  margin:0 auto;
+  // padding:50px 20px;
+  // background:#eee;
+}
+</style>

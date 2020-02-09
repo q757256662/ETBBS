@@ -1,0 +1,100 @@
+<template>
+  <div class="QuestionPage">
+    <div class="Topic_container">
+      <div class="QuestionHeader">
+        <div class="QuestionHeader_main">
+          <h2 class="title">{{topicTitle}}</h2>
+          <p v-html="list[0].Contents" style="margin:10px 0;"></p>
+          <div class="QuestionHeader_footer_main">
+            <div class="QuestionButtoGroup">
+              <el-button>关注问题</el-button>
+              <el-button>写回答</el-button>
+            </div>
+            <div class="QuestionHeaderActions">
+              <el-button>邀请回答</el-button>
+              <span>10条评论</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="list" v-for="item in list" :key="item.Id">
+        <div class="list_header">
+        </div>
+        <div class="list_item">
+          {{list.Contents}}
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+  import {
+    GetContents
+  } from '@/api/Contents'
+  export default {
+    name: 'TopicSingle',
+    data() {
+      return {
+        list: [{
+          Contents: ''
+        }], //回复列表
+        total: 0, //回复条数
+        topicTitle: "", //帖子标题
+        topicId: 0 //帖子ID
+      }
+    },
+    methods: {},
+    created() {
+      // console.log(this.$route.query.topicId)
+      this.topicId = this.$route.query.topicId
+      GetContents({
+        topicId: this.topicId
+      }).then(res => {
+        if (res.Success) {
+          this.list = res.Data.Rows;
+          this.total = res.Data.Total;
+          this.topicTitle = res.Data.Title
+          console.log(this.list);
+        }
+      })
+    },
+    mounted() {}
+  }
+</script>
+
+
+<style rel="stylesheet/scss" lang="scss" scoped>
+
+  .QuestionPage{
+    
+  }
+  .Topic_container {
+  }
+  .Topic_container .QuestionHeader {
+    width: 100%;
+    box-shadow: 0 1px 3px rgba(26, 26, 26,.1)
+  }
+  .Topic_container .QuestionHeader .QuestionHeader_main {
+    width: 700px;
+    margin: 0 auto;
+  }
+  .Topic_container .QuestionHeader .QuestionHeader_main .title {
+    margin: 12px 0 4px 0;
+    font-weight: 600;
+    font-size: 22px;
+  }
+
+  .QuestionHeader_footer_main{
+    display: flex;
+    justify-content: start;
+    margin-top:10px;
+  }
+
+  .QuestionHeader_footer_main .QuestionButtoGroup{
+    margin-right: 13px;
+  }
+
+  .QuestionHeader_footer_main .QuestionHeaderActions{
+    width: 200px;
+  }
+</style>

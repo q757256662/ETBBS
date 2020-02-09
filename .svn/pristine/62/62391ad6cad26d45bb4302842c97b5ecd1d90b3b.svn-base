@@ -1,0 +1,150 @@
+<template>
+    <div class="nav">
+      <div class="nav_left">
+        <img src="./logo.png" alt="logo" class="header_logo">
+        <span>论坛</span>
+      </div>
+      <div class="nav_right">
+        <el-tag>{{this.$store.state.user.userinfo.Role}}-{{this.$store.state.user.userinfo.name}}</el-tag>
+        <span>
+          <el-input placeholder="请输入关键词"></el-input>
+        </span>
+        <ul>
+          <!-- <li>个人信息</li> -->
+          <router-link to="/dashboard">个人信息</router-link>
+          <li>在线人数</li>
+          <li @click="handleExit()">退出账号</li>
+        </ul>
+      </div>
+    </div>
+</template>
+
+
+
+<script>
+// import Media from 'vue-media'
+import { mapState, mapGetters } from 'vuex'
+
+export default {
+    data () {
+        return {
+            // m: $.media,
+            isXs: true,
+            showNavmenuBtn: false,
+            searchText: ''
+        }
+    },
+    computed: {
+        ...mapState([
+            'config'
+        ]),
+        ...mapGetters([
+            'isAboutPageEnable', 'isSearchEnable'
+        ]),
+        ...mapState('user', ['userData', 'unread']),
+        ...mapGetters('user', ['isSiteAdmin'])
+    },
+    mounted: function () {
+    },
+    watch: {
+        '$route' (to, from) {
+            if (this.isXs) {
+                this.showNavmenuBtn = false
+            } else {
+                this.showNavmenuBtn = true
+            }
+        }
+    },
+    methods: {
+        doSearch: function () {
+            // if (!this.searchText) return
+            this.$router.push({
+                name: 'search',
+                query: {
+                    q: this.searchText.trim()
+                }
+            })
+        },
+        flagClick: function () {
+            ;
+        },
+        navmenuToggle: function () {
+            this.showNavmenuBtn = !this.showNavmenuBtn
+        },
+        xsEnter: function () {
+            this.isXs = true
+            this.showNavmenuBtn = false
+        },
+        xsLeave: function () {
+            this.isXs = false
+            this.showNavmenuBtn = true
+        },
+        navActive: function (...names) {
+            for (let name of names) {
+                if (this.$route.name && this.$route.name.startsWith(name)) {
+                    return 'link-active'
+                }
+            }
+            return 'flag'
+        },
+        signout: async function () {
+            this.$store.commit('dialog/SET_USER_SIGNOUT', { val: true })
+        },
+        //退出登录
+        handleExit(){
+          this.$store.dispatch('LogOut').then(() => {
+          location.reload() // 为了重新实例化vue-router对象 避免bug
+        })
+        }
+    },
+    // components: {
+    //     Media
+    // }
+}
+</script>
+
+
+<style lang="scss" scoped>
+  .nav{
+    height:100%;
+    z-index: 10000;
+    display: flex;
+    justify-content: space-between;
+    margin:0 20px;
+  }
+
+  .nav_left{
+    width: 250px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .nav_right{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 600px;
+  }
+
+  .nav_right ul{
+    list-style:none;
+    display: flex;
+    align-items: center;
+
+  }
+
+  .nav_right ul li{
+    margin:0 10px;
+  }
+
+  .nav_left span{
+    font-size: 20px;
+  }
+
+  .header_logo{
+    background: url('./logo.png');
+    vertical-align: middle;
+  }
+
+</style>

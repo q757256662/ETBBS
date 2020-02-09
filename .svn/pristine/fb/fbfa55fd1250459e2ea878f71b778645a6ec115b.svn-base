@@ -1,0 +1,43 @@
+<template>
+  <div>
+   <div ref="editor" class="editClass" style="text-align:left;opacity:0.7;"></div>
+    <button v-on:click="getContent">查看内容</button>
+  </div>
+</template>
+
+<script>
+  import E from 'wangeditor'
+  import plugins from './plugins'
+  import toolbar from './toolbar'
+  export default {
+    name: 'editor',
+    data() {
+      return {
+        editorContent: ''
+      }
+    },
+    created(){
+
+    },
+    methods: {
+      getContent: function() {
+        alert(this.editorContent)
+      },
+      getValue(){
+
+      },
+    },
+   mounted() {
+      this.editor = new E(this.$refs.editor)
+      this.editor.customConfig.onchange = (html) => {
+        this.editorContent = html
+      }
+      this.editor.customConfig.uploadImgShowBase64 = true
+      this.editor.create()
+    },
+  }
+</script>
+
+<style scoped>
+
+</style>

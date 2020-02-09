@@ -1,0 +1,117 @@
+<template>
+<div class="card-main">
+  <el-card class="box-card">
+    <div slot="header" class="clearfix">
+      <!-- <span>卡片名称</span> -->
+      <!-- <el-button  type="text">操作按钮</el-button> -->
+      <el-input
+        placeholder="搜索"
+        style="float: right; padding: 3px 0;width:200px;"
+        size="mini"
+        @change="handleSearch"
+      ></el-input>
+    </div>
+    <div v-if="type=='link'">
+      <div v-for="item in inviteListReplace" :key="item.TopicId" class="text item">
+        <span class="title" :title="item.TopicTitle">{{item.TopicTitle}}</span>
+        <el-button @click="handleInviteReply(item)">复制链接</el-button>
+      </div>
+    </div>
+    <div v-if="type=='invite'">
+      <div v-for="(item,index) in inviteListReplace" :key="item.UserId" class="text item">
+        <span>{{item.UserName}}</span>
+        <el-button type="mini" @click="handleInviteUser(item,index)">邀请</el-button>
+      </div>
+    </div>
+  </el-card>
+</div>
+
+</template>
+<script>
+export default {
+  name: "inviteList",
+  props: {
+    inviteList: Array,
+    type: String
+  },
+  data() {
+    return {
+      inviteListReplace: this.$props.inviteList
+    };
+  },
+  methods: {
+    /**复制链接 */
+    handleInviteReply(topic) {
+      // console.log(topic)
+      // this.inviteListReplace.splice(index,1)
+      this.$emit("onInvite", topic);
+    },
+    handleSearch(val) {
+      // console.log(val)
+      // console.log(this.inviteListReplace);
+      if (this.type == "invite") {
+        this.inviteListReplace = this.$props.inviteList.filter(el => {
+          return el.UserName.includes(val);
+        });
+      } else {
+        this.inviteListReplace = this.$props.inviteList.filter(el => {
+          return el.TopicTitle.includes(val);
+        });
+      }
+    },
+    /**邀请用户回答 */
+    handleInviteUser(user,index) {
+      // console.log(user)
+      this.inviteListReplace.splice(index,1)
+      this.$emit('onInviteUser',user)
+    }
+  }
+};
+</script>
+<style scoped rel="stylesheet/scss" lang="scss">
+.text {
+  font-size: 14px;
+}
+
+.text .title {
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 200px;
+}
+
+.item {
+  /* padding-bottom: 18px;
+    margin-bottom:5px;
+    padding-top:5px; */
+  height: 40px;
+  line-height: 40px;
+  border-bottom: 1px solid #eee
+}
+
+.item .el-button {
+  float: right;
+  margin-top: 5px;
+
+}
+
+.clearfix:before,
+.clearfix:after {
+  display: table;
+  content: "";
+}
+.clearfix:after {
+  clear: both;
+}
+.card-main /deep/ .el-card__header {
+
+  /* width: 480px; */
+      padding: 5px 60px;
+
+
+}
+.card-main /deep/ .el-card__body{
+  padding: 6px;
+}
+</style>

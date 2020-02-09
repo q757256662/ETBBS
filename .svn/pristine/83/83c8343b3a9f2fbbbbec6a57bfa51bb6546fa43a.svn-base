@@ -1,0 +1,36 @@
+import request from '@/utils/request'
+
+export function getList(params) {
+  return request({
+    url: '/table/list',
+    method: 'get',
+    params
+  })
+}
+
+export function getAboutMessage(params) {
+  return request({
+    url: '/AboutMessage/loadPostdata',
+    method: 'get',
+    params
+  })
+}
+
+//检查手机号接口
+export function checkTel(obj) {
+  return request({
+    url: '/AboutMessage/checkphone',
+    method: 'post',
+    data: obj
+  })
+}
+
+
+//发帖子
+export function submitTopic(obj) {
+  return request({
+    url: '/AboutMessage/userpostmessage',
+    method: 'post',
+    data: obj
+  })
+}

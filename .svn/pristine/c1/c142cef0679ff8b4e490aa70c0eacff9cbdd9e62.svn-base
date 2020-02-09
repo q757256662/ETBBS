@@ -1,0 +1,358 @@
+<template>
+  <div class="board-item">
+    <div class="title-recent">
+      <div
+        class="avatar"
+        :style="{background:topicItem.Color}"
+      >{{topicItem.KeyFileIds.substring(0,1) }}</div>
+      <div class="right">
+        <h2>
+          <p class="title" :title="topicItem.FirstContent">{{topicItem.Title}}</p>
+          <p class="topic-info">
+            <!-- <router-link class="author" to="/"> -->
+            <span class="bottom-name" style="width:50px;">{{topicItem.CreateName}}</span>
+            <!-- </router-link> -->
+            <span class="bottom-name">{{topicItem.CompanyName|SubStringCompany}}</span>
+            <span class="time bottom-name">{{topicItem.CreateTime}}</span>
+            <span class="keyFiles">
+              <i class="block" :style="{background:topicItem.Color}"></i>
+              {{topicItem.KeyFileIds}}
+            </span>
+          </p>
+        </h2>
+      </div>
+      <div class="icons">
+        <span
+          class="mark"
+          title="钉一下"
+          @click.prevent="handleMark({title:topicItem.Title,topicId:topicItem.Id})"
+        >
+          <svg-icon icon-class="mark"></svg-icon>
+        </span>
+        <span title="加急" v-if="topicItem.IsHot">
+          <svg-icon icon-class="hot"></svg-icon>
+        </span>
+        <!-- icon专用 TODO -->
+      </div>
+      <div class="append-icons">
+        <!-- icon专用 TODO -->
+      </div>
+    </div>
+    <div class="detail">
+      <div class="count-block">
+        <div class="count">
+          <p class="num">{{topicItem.ReplyCount}}</p>
+          <p class="txt">回复</p>
+        </div>
+      </div>
+      <div class="recent">
+        <span class="line" :style="{borderLeft: `4px solid ${topicItem.Color}`}"></span>
+        <div class="post">
+          <span>
+            <p>
+              <i class="icon icarus icon-reply"></i>
+              {{topicItem.Reply.name}}
+            </p>
+            <!-- <p class="content" v-text="topicItem.Reply.contents" :title="topicItem.Reply.contents">
+            </p>-->
+          </span>
+          <div class="time">{{topicItem.Reply.time}}</div>
+        </div>
+      </div>
+      <DeleteIcon
+        :topicId="topicItem.Id"
+        @onFlashPage="flashTopic"
+        v-if="topicItem.ReplyCount==1&&createUser==topicItem.CreateName"
+        class="delete-class"
+      ></DeleteIcon>
+    </div>
+  </div>
+</template>
+<script>
+import { formatTime, delHtmlTag } from "@/utils/index";
+import DeleteIcon from "@/components/DeleteIcon";
+import { MarkTopic } from "@/api/topic";
+import { GetLimitScore } from "@/api/topicList";
+export default {
+  name: "complexItem",
+  props: {
+    item: {
+      type: Object,
+      default: null
+    },
+    flashTopic: {
+      type: Function,
+      default: null
+    },
+    background: {
+      type: Number,
+      default: 0
+    }
+  },
+  components: {
+    DeleteIcon: DeleteIcon
+  },
+  data() {
+    return {
+      colorBox: {
+        ULSG打推: "#FB966E",
+        ET打推: "rgb(64, 158, 255)",
+        Bag打推: "#FF9999",
+        排料: "#99CC33",
+        绘图仪和切割机: "#FF9900",
+        网络睿排: "rgb(239, 191, 0)",
+        版本发布: "#FF0033",
+        ETPS: "#FF9966",
+        ETBRA: "#FF8000",
+        裁床: "#FF9966",
+        功能操作说明: "#FF9966",
+        没有: "#000",
+        排料: "#99CC33",
+        升级内容: "#00AEAE",
+        数字化仪: "#0066CC",
+        培训文档: "#8C8C00",
+        ICM: "#8080C0",
+        PPT: "#804040",
+        微信: "#8F4586",
+        ET: "#00EC00"
+      },
+      topicItem: {},
+      createUser: ""
+    };
+  },
+  created() {
+    this.topicItem = this.handleFormat(this.$props.item);
+    this.createUser = this.$store.state.user.userinfo.name;
+  },
+  beforeMount() {},
+  methods: {
+    //将得到的数据格式化
+    handleFormat(el) {
+      // console.log(el);
+      el.CreateTime = formatTime(el.CreateTime);
+      // console.log(el.Reply.time);
+      el.Reply.time = formatTime(el.Reply.time);
+      el.Reply.contents = delHtmlTag(el.Reply.contents);
+
+      el.KeyFileIds = el.KeyFileIds.substring(
+        0,
+        el.KeyFileIds.charAt(el.KeyFileIds.length - 1) == ","
+          ? el.KeyFileIds.length - 1
+          : el.KeyFileIds.length
+      );
+      let colorBox = el.KeyFileIds.split(",");
+      el.Color =
+        this.colorBox[colorBox[0]] == undefined
+          ? "#FF9966"
+          : this.colorBox[colorBox[0]];
+      el.FirstContent = delHtmlTag(el.FirstContent);
+      return el;
+    },
+    //标记帖子
+    handleMark(item) {
+      MarkTopic(item).then(res => {
+        if (res.Success) {
+          this.$message({
+            message: "标记成功",
+            type: "success"
+          });
+        } else {
+          this.$message({
+            message: res.ErrMes,
+            type: "warning"
+          });
+        }
+      });
+    }
+  },
+  filters: {
+    SubStringCompany(row) {
+      let str = row;
+      if (row != null && row.indexOf("（") != -1) {
+        str = row
+          .replace("（", "")
+          .replace("）", "")
+          .substring(0, 2);
+      }
+      return str;
+      // this.barname.push(item.CompanyName.replace("（", "").replace("）", "").substring(0, 2))
+    }
+  }
+};
+</script>
+
+<style rel="stylesheet/scss" lang="scss" scoped>
+.board-item {
+  display: flex;
+  height: 100%;
+  justify-content: space-between;
+  align-items: center;
+  // background:#fff;
+}
+
+.board-item:hover {
+  background: #e5effa;
+}
+
+.title {
+  color: #000;
+  font-size: 0.8em;
+  white-space: nowrap;
+  /* 不换行 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 500px;
+  font-weight: 600;
+}
+.title-recent {
+  display: flex;
+  // width: 45%;
+  height: 100%;
+  align-items: center;
+  width: 750px;
+}
+.title-recent .avatar {
+  display: block;
+  height: 40px;
+  min-width: 40px;
+  font-size: 20px;
+  text-align: center;
+  line-height: 40px;
+  color: #fff;
+  border-radius: 5px;
+  box-sizing: border-box;
+  opacity: 0.6;
+  position: relative;
+  top: 1px;
+}
+.title-recent .avatar img {
+  // max-height:50px;
+  // max-width:50px;
+  height: 100%;
+  width: 100%;
+}
+.title-recent .right {
+  margin-left: 10px;
+}
+.title-recent .right h2 p {
+  // margin: 5px 0;
+  height:20px;
+  line-height: 20px;
+  font-size: 15px;
+}
+.title-recent .right .topic-info {
+  font-size: 12px;
+  // width: 550px;
+  height: 15px;
+  line-height: 15px;
+}
+.title-recent .right .topic-info .author {
+  display: inline-block;
+  color: #337ab7;
+  width: 70px;
+}
+.title-recent .right .topic-info .time {
+  margin-left: 10px;
+  width: 130px;
+}
+.title-recent .right .keyFiles {
+  font-size: 12px;
+  margin-left: 10px;
+  color: #343a40;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  width: 180px;
+}
+.detail {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  justify-content: space-between;
+  width: 250px;
+}
+.detail .count-block {
+  width: 100px;
+  display: inline-block;
+  text-align: center;
+}
+.detail .count {
+  // margin-left: 20px;
+  width: 50px;
+  display: inline-block;
+  text-align: center;
+}
+.detail .count .num {
+  font-size: 20px;
+  color: #aaa;
+}
+.detail .count .txt {
+  font-size: 15px;
+  color: #ccc;
+  margin-top: 5px;
+}
+.line {
+  // border-left: 4px solid #ccc;
+  height: 85%;
+  padding-left: 0;
+  opacity: 0.6;
+}
+.detail .recent {
+  display: flex;
+  // justify-content: space-between;
+  align-items: center;
+  width: 155px;
+  height: 100%;
+  box-sizing: border-box;
+  margin-left: 13px;
+}
+.recent .post {
+  // width: 350px;
+  box-sizing: border-box;
+  margin: 0 20px;
+  padding: 8px 0;
+  font-size: 15px;
+}
+.recent .post .content {
+  font-size: 0.8em;
+  color: #aaa;
+  margin: 10px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box; //作为弹性伸缩盒子模型显示。
+  -webkit-box-orient: vertical; //设置伸缩盒子的子元素排列方式--从上到下垂直排列
+  -webkit-line-clamp: 2; //显示的行
+  width: 300px;
+}
+.time {
+  color: #888;
+  font-size: 12px;
+  // width: 200px; // float: right;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.block {
+  height: 10px;
+  width: 10px;
+  display: inline-block;
+  opacity: 0.6;
+}
+.icons {
+  display: flex;
+  justify-content: space-around;
+}
+
+.icons > * {
+  margin-right: 10px;
+}
+.delete-class {
+  position: relative;
+  bottom: 20px;
+  right:20px;
+}
+
+.bottom-name {
+  display: inline-block;
+}
+</style>

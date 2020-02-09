@@ -1,0 +1,189 @@
+<template>
+  <div class="QuestionPage">
+    <div class="Topic_container">
+      <div class="QuestionHeader">
+        <div class="QuestionHeader_main">
+          <h2 class="title">{{topicTitle}}</h2>
+          <p v-html="list[0].Contents" style="margin:10px 0;"></p>
+          <div class="QuestionHeader_footer_main">
+            <div class="QuestionButtoGroup">
+              <el-button>关注问题</el-button>
+              <el-button>写回答</el-button>
+            </div>
+            <div class="QuestionHeaderActions">
+              <el-button>邀请回答</el-button>
+              <span>10条评论</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="list" v-for="item in list" :key="item.Id">
+        <div class="list-body">
+          <div class="list_header">
+            <img src="static/img/herder.png" alt="">
+            <span>{{item.CompanyName}}</span>
+            <span>{{item.Name}}</span>
+            <span>{{item.Time  | TimeChange}}</span>
+          </div>
+          <div v-html="item.Contents" class="list_item">
+            {{item.Contents}}
+          </div>
+        </div>
+        <div class="list-border">
+        </div>
+      </div>
+    </div>
+    <el-tooltip placement="top" content="回到顶部">
+      <back-to-top :custom-style="myBackToTopStyle" :visibility-height="300" :back-position="0" transition-name="fade" />
+    </el-tooltip>
+  </div>
+</template>
+<script>
+  import {
+    GetContents,
+    topicState
+  } from '@/api/Contents'
+  import BackToTop from '@/components/BackToTop'
+  export default {
+    name: 'TopicSingle',
+    components: {
+      BackToTop
+    },
+    data() {
+      return {
+        list: [{
+          Contents: ''
+        }], //回复列表
+        total: 0, //回复条数
+        topicTitle: "", //帖子标题
+        topicId: 0, //帖子ID
+        myBackToTopStyle: {
+          right: '50px',
+          bottom: '50px',
+          width: '40px',
+          height: '40px',
+          borderRadius: '4px',
+          lineHeight: '45px', // 请保持与高度一致以垂直居中
+          background: '#e7eaf1' // 按钮的背景颜色
+        }
+      }
+    },
+    created() {
+      // console.log(this.$route.query.topicId)
+      this.topicId = this.$route.query.topicId
+      this.getList()
+    },
+    mounted() {},
+    methods: {
+      getList() {
+        GetContents({
+          topicId: this.topicId
+        }).then(res => {
+          console.log(res)
+          if (res.Success) {
+            this.list = res.Data.Rows;
+            this.total = res.Data.Total;
+            this.topicTitle = res.Data.Title
+            console.log(this.list);
+            if (this.$route.query.topicState == 1) {
+              // this.editTopic();
+            }
+          }
+        })
+      },
+      editTopic() {
+        let topicForm = {};
+        topicForm.topicId = this.$route.query.topicId
+        topicState(topicForm).then(res => {
+          console.log(res)
+        })
+      },
+    },
+    filters: {
+      TimeChange(row) {
+        // console.log(row)
+        var d = new Date(row);
+        var times = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate() + ' ' + d.getHours() + ':' + d.getMinutes() +
+          ':' + d.getSeconds();
+        return times;
+      },
+    }
+  }
+</script>
+
+
+<style rel="stylesheet/scss" lang="scss" scoped>
+  .QuestionPage {}
+  .Topic_container {}
+  .Topic_container .QuestionHeader {
+    width: 100%;
+    box-shadow: 0 1px 3px rgba(26, 26, 26, .1)
+  }
+  .Topic_container .QuestionHeader .QuestionHeader_main {
+    width: 700px;
+    margin: 0 auto;
+  }
+  .Topic_container .QuestionHeader .QuestionHeader_main .title {
+    margin: 12px 0 4px 0;
+    font-weight: 600;
+    font-size: 22px;
+  }
+  .QuestionHeader_footer_main {
+    display: flex;
+    justify-content: start;
+    margin-top: 10px;
+  }
+  .QuestionHeader_footer_main .QuestionButtoGroup {
+    margin-right: 13px;
+  }
+  .QuestionHeader_footer_main .QuestionHeaderActions {
+    width: 200px;
+  }
+  .list {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    margin-left: 20px;
+    display: flex;
+    flex-direction: column;
+  }
+  .list-body {
+    display: flex;
+    flex-direction: row;
+  }
+  .list_header {
+    width: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    img {
+      border: 1px solid gray;
+      border-radius: 6%;
+      height: 150px;
+      width: 150px;
+      margin-left: 25px;
+    }
+    span {
+      margin-top: 8px;
+      text-align: center;
+    }
+    .avatar {
+      display: block;
+      height: 32px;
+      min-width: 32px;
+      font-size: 20px;
+      text-align: center;
+      line-height: 28px;
+      color: #fff;
+      border-radius: 5px;
+      box-sizing: border-box;
+      opacity: .6;
+    }
+  }
+  .list-border {
+    border: 1px solid #eee;
+    margin-top: 15px;
+  }
+  .list_item {
+    margin-left: 50px;
+  }
+</style>

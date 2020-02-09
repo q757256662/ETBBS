@@ -1,0 +1,329 @@
+<template>
+  <div class="topic_main">
+    <el-input class="topic_head" placeholder="主题"></el-input>
+    <el-form :inline="true">
+      <el-form-item label="指明关注人">
+        <el-select v-model="SubmitForm.ConcernPeople" multiple placeholder="指明关注人">
+          <el-option v-for="item in optionsConcernPeople" :key="item.UserId" :label="item.UserName" :value="item.UserId">
+          </el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="帖子类型">
+        <el-select v-model="SubmitForm.topicType" placeholder="帖子类型">
+          <el-option v-for="item in optionsTopicType" :key="item.value" :label="item.label" :value="item.value">
+          </el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="">
+        <el-checkbox v-model="checkedUrgency">紧急</el-checkbox>
+      </el-form-item>
+      <el-form-item label="限制分">
+        <el-input type="number"></el-input>
+      </el-form-item>
+      <el-input placeholder="请输入关键字" v-model="SubmitForm.key" style="width: 300px;"></el-input>
+      <el-form-item label="相关师傅手机号">
+        <el-input></el-input>
+      </el-form-item>
+      <el-button type="primary" @click="checkPhone">检查手机号</el-button>
+      <el-form-item label="关键词">
+        <el-checkbox-group v-model="SubmitForm.checkedKeyword">
+          <el-checkbox v-for="keyWord in keyWords" :label="keyWord.KeyName" :key="keyWord.KeyId">{{keyWord.KeyName}}</el-checkbox>
+        </el-checkbox-group>
+      </el-form-item>
+    </el-form>
+    <div class="upload-container" id="upload-container" >
+      <el-upload class="upload-demo" ref="upload" :header="headersData" :action="common.region" :on-success="handleSuccess" :on-error="handleError" :before-upload="beforeUpload" :on-change="handleChange" :on-remove="handleRemove" :file-list="fileList" :data="common"
+        :http-request="handleSubmit" :auto-upload="false">
+        <el-button size="small" type="primary">添加附件</el-button>
+      </el-upload>
+    </div>
+    <div ref="editor" class="editClass" style="text-align:left;opacity:0.7;"></div>
+    <button v-on:click="getContent">查看内容</button>
+  </div>
+</template>
+
+<script>
+  import {
+    getAboutMessage
+  } from '@/api/table'
+  import {
+    getToken,
+    setToken,
+    removeToken
+  } from '@/utils/auth'
+  import E from 'wangeditor'
+  import plugins from '@/components/Editor/plugins'
+  import toolbar from '@/components/Editor/toolbar'
+  export default {
+    data() {
+      return {
+        SubmitForm: {
+          ConcernPeople: null, //关注人
+          topicType: null, //类型
+          checkedKeyword: null, //关键字
+          key: null
+        },
+        optionsConcernPeople: [], //关注人
+        checkedUrgency:false,//紧急
+        optionsTopicType: [{
+          value: '1',
+          label: '普通贴'
+        }, {
+          value: '2',
+          label: '私人贴'
+        }, {
+          value: '3',
+          label: '本公司公告贴'
+        }, {
+          value: '4',
+          label: '功能贴'
+        }, {
+          value: '5',
+          label: '程序更新'
+        }, {
+          value: '6',
+          label: '疑难解答'
+        }, {
+          value: '7',
+          label: '其他开发部公告贴'
+        }, ], //类型
+        keyWords: [], //关键字
+        checkedKeyword: '',
+        fileList: [],
+        headersData: {
+          Authorization: 'Bearer ' + getToken()
+        },
+        common: {},
+        ossFileForm: {
+          fileName: "",
+          sourceKey: "",
+          fileSize: ""
+        },
+      }
+    },
+    created() {
+      // this.fetchData()
+      // this.getValue();
+    },
+    methods: {
+      getContent: function() {
+        alert(this.editorContent)
+      },
+      getValue() {
+        getAboutMessage().then(res => {
+          console.log(res)
+          if (res.Success == true) {
+            this.optionsConcernPeople = res.Data.FocusUser;
+            this.keyWords = res.Data.KeyNames;
+          }
+        })
+      },
+      checkPhone() {},
+      beforeUpload2(file) {
+        // console.log(file);
+        // this.fullscreenLoading = true;
+        if (file.type.indexOf("image") != -1) {
+          {
+            this.$message.error('只能选择文件类型！');
+            // this.fullscreenLoading = false;
+            return false;
+          }
+        }
+      },
+      //文件
+      handleRemove() {
+        //   this.handleClearUser()
+      },
+      // 上传之前的回调
+      beforeUpload(file) {
+        //  this.getOssMsg();
+        // this.TimeChange()
+        let changeForm = {};
+        changeForm.CompanyId = this.selectList;
+        this.common.name = file.name;
+        this.common.key = this.common.dir + this.userId + this.TimeChange() + file.name;
+        this.ossFileForm.fileName = file.name;
+        this.ossFileForm.sourceKey = this.common.key;
+        // this.ossFileForm.fileSize = Math.round(file.size / 1024);
+        this.ossFileForm.fileSize = file.size;
+        this.ossFileForm.companyId = this.selectList;
+        let str = "";
+        this.checkUser.map(el => {
+          str += el + "|";
+        });
+        str = str.substring(0, str.length - 1);
+        this.ossFileForm.touser = str;
+      },
+      handleChange(file, fileList) {
+        let name = this._splitExtension(file.name)
+        if (name == 'pla' || name == 'prj') {
+          // this.getOssMsg();//获取必要参数地址
+          getOss().then(res => {
+            if (res.Success) {
+              let r = res.data;
+              this.common.policy = res.data.policy;
+              this.common.OSSAccessKeyId = res.data.accessid;
+              this.common.success_action_status = "200";
+              this.common.signature = res.data.signature;
+              this.common.region = res.data.oshost;
+              this.common.dir = res.data.dir;
+            } else {
+              this.$message({
+                message: res.ErrMes,
+                type: "error"
+              })
+              this.fileList = [];
+            }
+          });
+        } else {
+          this.$message({
+            message: "只能上传pla或者prj文件！",
+            type: "warning"
+          });
+          this.fileList = [];
+        }
+        if (fileList.length >= 2) {
+          fileList.splice(0, fileList.length - 1);
+        } else {
+          this.isHaveFile = true;
+        }
+      },
+      handleSubmit(row) {
+        let formData = new FormData()
+        let config = {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+        formData.append('policy', this.common.policy)
+        formData.append('OSSAccessKeyId', this.common.OSSAccessKeyId)
+        formData.append('success_action_status', this.common.success_action_status)
+        formData.append('signature', this.common.signature)
+        formData.append('region', this.common.region)
+        formData.append('dir', this.common.dir)
+        formData.append('name', this.common.name)
+        formData.append('key', this.common.key)
+        formData.append('file', row.file)
+        axios.post(this.common.region, formData, config).then(res => {
+          this.handleSuccess()
+        }).catch(res => {
+          console.log(res);
+        })
+      },
+      handleError(err, file, fileList) {
+        if (err) {
+          this.$message({
+            message: "上传文件失败",
+            type: "error"
+          });
+        }
+      },
+    },
+    mounted() {
+      this.editor = new E(this.$refs.editor)
+      this.editor.customConfig.onchange = (html) => {
+        this.editorContent = html
+      }
+      this.editor.customConfig.uploadImgShowBase64 = true
+      this.editor.create()
+    },
+  }
+</script>
+
+<style rel="stylesheet/scss" lang="scss" scoped>
+  .topic_main {
+    width: 1200px;
+    margin: 30px auto;
+  }
+  .topic_head {
+    margin-bottom: 20px;
+  }
+  .upload-container /deep/ .el-upload {
+    width: 10px !important;
+  }
+  .upload-container {
+    border: 1px solid #e0e0e0;
+    padding: 5px;
+    margin: 5px 0px;
+    background: #eef1f6; // height: 60px;
+    width: 100%;
+    display: flex;
+    justify-content: start; // align-items: top;
+    .editor-slide-upload {
+      display: flex;
+      align-content: center; // margin-bottom: 30px; // display: inline-block;
+      width: 100%; // margin-right: 20px;
+    }
+    .editor-slide-upload1 {
+      // margin-bottom: 20px; // padding: 5px;
+      // display: inline-block;
+      // width: 100%;
+      // margin-right: 20px;
+    }
+    .editor-slide-upload /deep/ .el-upload-list {
+      display: flex;
+      align-items: start;
+      display: -ms-inline-flexbox;
+      border: 0px solid #e0e0e0; //  padding: 0 5px;
+      margin-left: 5px; //  margin: 5px 0px; 
+      background: #eef1f6;
+      overflow-x: auto;
+      max-width: 87%; // height: 52px;
+      .el-upload-list__item-name {
+        color: #606266;
+        display: block;
+        margin-right: 40px;
+        margin-left: 5px; // overflow: hidden;
+        padding-left: 4px;
+        margin-top: -2px;
+        text-overflow: ellipsis;
+        -webkit-transition: color .3s;
+        transition: color .3s;
+        /* white-space: nowrap; */
+        /* display: inline-block; */
+        border: 1px solid #20a0ff;
+        border-radius: 5px;
+        /* margin: 5px 10px; */
+        /* text-align: center; */
+        padding: 0 5px;
+        /* padding-right: 10px; */
+      }
+      a {
+        display: inline-block;
+        border: 1px solid #20a0ff;
+        background-color: rgba(32, 160, 255, 0.1);
+        border-color: rgba(32, 160, 255, 0.2);
+        border-radius: 5px;
+        margin: 5px 10px;
+        text-align: center;
+        padding: 5px 0;
+        padding-right: 10px;
+      }
+    }
+    .editor-slide-upload /deep/ .el-upload-list li {
+      // border: 1px solid red;
+    }
+  }
+  .editor-slide-upload /deep/ .el-upload-list__item:first-child {
+    margin-top: 5px;
+  }
+   ::-webkit-scrollbar {
+    /*滚动条整体样式*/
+    width: 4px;
+    /*高宽分别对应横竖滚动条的尺寸*/
+    height: 4px;
+  }
+   ::-webkit-scrollbar-thumb {
+    /*滚动条里面小方块*/
+    border-radius: 5px;
+    -webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.2);
+  }
+   ::-webkit-scrollbar-track {
+    /*滚动条里面轨道*/
+    -webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+    border-radius: 0;
+    background: rgba(0, 0, 0, 0.1);
+  }
+</style>
+

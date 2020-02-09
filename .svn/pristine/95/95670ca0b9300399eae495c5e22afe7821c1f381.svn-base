@@ -1,0 +1,179 @@
+<template>
+  <div style="padding:20px">
+      <div>
+     <span>重新指定关注人：</span> 
+    <el-select
+          @change="changeFocus($event)"
+          v-model="SubmitForm.userId"
+          placeholder="请选择关注人"
+        >
+          <el-option
+            v-for="item in optionsConcernPeople"
+            :key="item.UserId"
+            :label="item.UserName"
+            :value="item.UserId"
+          ></el-option>
+        </el-select>
+      </div>
+
+    <div ref="editor" class="editClass"></div>
+    <el-button
+      type="primary"
+      @click="handleReplyTopic"
+      :laoding="uploadLoading"
+      style="margin-top:20px;float:right;"
+    >确定</el-button>
+
+    <!-- <button v-on:click="getContent">查看内容</button> -->
+  </div>
+</template>
+
+<script>
+import E from "wangeditor";
+import plugins from "@/components/editor/plugins";
+import toolbar from "@/components/editor/toolbar";
+import { getAboutMessage } from "@/api/table";
+import axios from "axios";
+import { mapState } from "vuex";
+import {
+  changeTopic,//转为为结帖
+} from "@/api/topicList.js";
+export default {
+  name: "editor",
+  components: {
+   
+  },
+  props: {
+    currentTopic: {
+      type: [Number, String], //当前帖子ID
+      default: () => {}
+    },
+  },
+  data() {
+    return {
+      editorContent: "", //编辑器内容
+      uploadLoading:false,
+      optionsConcernPeople: [], //关注人
+        SubmitForm: {
+        userId: "",//关注人
+        topicId: "",
+        content: "", //内容
+       
+      },
+    };
+  },
+  computed: {
+    ...mapState({
+      CustomerUser: state => state.user.userinfo.isCustomerUser
+    })
+  },
+  watch: {
+  },
+  created() {
+      this. getValue();
+      console.log(this.currentTopic);
+  },
+  methods: {
+    //关注人
+    changeFocus(e) {
+      console.log(e)
+    //   this.optionsConcernPeople.forEach(element => {
+    //     // console.log(element)
+    //     if (element.UserId == e) {
+    //       this.SubmitForm.userId = element.UserName;
+    //       // console.log(this.SubmitForm.FocusUser)
+    //     }
+    //   });
+    },
+getValue() {
+      getAboutMessage().then(res => {
+        if (res.Success == true) {
+          this.optionsConcernPeople = this.onFilterConcern(res.Data.FocusUser)
+          this.optionsTopic = res.Data.TopicList;
+          this.keyWords = res.Data.KeyNames;
+        }
+      });
+    },
+        /**过滤邀请人员 */
+    onFilterConcern(row){
+      row = row.filter(el=>{
+          return this.$store.state.user.userinfo.id!==el.UserId
+      })
+      if(this.$store.state.user.userinfo.CompanyName!=='（开发）深圳市布易科技有限公司'){
+        return row.filter(el=>{
+          if(el.UserId==4||el.UserId==5){
+            return false
+          }else{
+            return true
+          }
+        })
+      }else{
+        return row
+      }
+    },
+    /**回帖 */
+    handleReplyTopic() {
+          let obj ={};
+          obj.content = this.editor.txt.html();
+          this.SubmitForm.topicId = this.$props.currentTopic;
+      
+        let str = obj.content.replace(/<br>/g, "")
+        str = str.replace(/\<p\>\<\/p\>/g,"")
+        str = str.trim()
+      this.SubmitForm.content = str;
+        // console.log(this.SubmitForm);
+        // if (obj.Content == null || obj.Content == ""||str=="") {
+        //   this.uploadLoading = false;
+        //   this.$message.warning("请输入内容");
+        // }
+        //  else 
+        //  {
+             changeTopic(this.SubmitForm).then(res=>{
+                    if(res.Success){
+                     this.$emit("onGetList");
+                     this.SubmitForm.userId = '';
+                     this.editorContent = "";
+                     this.editor.txt.clear();
+                    }else{
+                     this.$message.warning(res.ErrMes);
+                    }
+     })
+        //   ReplyMessage(obj).then(res => {
+        //     if (res.Success) {
+        //       this.editor.txt.clear();
+        //       this.uploadLoading = false;
+        //       // editor.txt.clear()
+       
+        //       this.fileList.splice(0);
+        //       this.editorContent = "";
+        //       this.editor.txt.clear();
+        //     } else {
+        //       this.$message.warning(res.ErrMes);
+        //     }
+        //   });
+        // }
+    
+    },
+  },
+  mounted() {
+    this.editor = new E(this.$refs.editor);
+    this.editor.customConfig.onchange = html => {
+      this.editorContent = html;
+    };
+    this.editor.customConfig.uploadImgShowBase64 = true;
+    this.editor.customConfig.pasteFilterStyle = false;
+    this.editor.create();
+
+  }
+};
+</script>
+
+<style scoped>
+.addtion_select {
+  /* border:1px solid red; */
+  margin-top: 10px;
+}
+.editClass {
+  opacity: 0.99;
+}
+</style>

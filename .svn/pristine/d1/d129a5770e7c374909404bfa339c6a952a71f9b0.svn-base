@@ -1,0 +1,139 @@
+<template>
+  <div>
+    <!-- <div v-if="device==='mobile'&&sidebar.opened" class="drawer-bg" @click="handleClickOutside"></div>
+    <sidebar class="sidebar-container"></sidebar>
+    <div class="main-container">
+      <navbar></navbar>
+      <app-main></app-main>
+    </div> -->
+    <el-container style="height:100vh;">
+      <el-header class="header">
+        <navbar></navbar>
+        </el-header>
+      <el-container>
+        <!-- <el-aside>
+          <sidebar class="sidebar"></sidebar>
+        </el-aside> -->
+        <el-main class="main" :style="{background:background}">
+          <app-main ></app-main>
+          <!-- <Sticky></Sticky> -->
+        </el-main>
+      </el-container>
+    </el-container>
+  </div>
+  
+</template>
+
+<script>
+import { Navbar, Sidebar, AppMain } from './components'
+import ResizeMixin from './mixin/ResizeHandler'
+
+export default {
+  name: 'layout',
+  components: {
+    Navbar,
+    Sidebar,
+    AppMain
+  },
+  mixins: [ResizeMixin],
+  computed: {
+    sidebar() {
+      return this.$store.state.app.sidebar
+    },
+    device() {
+      return this.$store.state.app.device
+    },
+    background(){
+      return this.$store.state.app.background
+    }
+    // classObj() {
+    //   return {
+    //     hideSidebar: !this.sidebar.opened,
+    //     withoutAnimation: this.sidebar.withoutAnimation,
+    //     mobile: this.device === 'mobile'
+    //   }
+    // }
+  },
+  methods: {
+    handleClickOutside() {
+      this.$store.dispatch('CloseSideBar', { withoutAnimation: false })
+    }
+  }
+}
+</script>
+
+<style rel="stylesheet/scss" lang="scss" scoped>
+  // @import "src/styles/mixin.scss";
+  // .app-wrapper {
+  //   @include clearfix;
+  //   position: relative;
+  //   height: 100%;
+  //   width: 100%;
+  // }
+  // .drawer-bg {
+  //   background: #000;
+  //   opacity: 0.3;
+  //   width: 100%;
+  //   top: 0;
+  //   height: 100%;
+  //   position: absolute;
+  //   z-index: 999;
+  // }
+
+  .header{
+    // border:1px solid red;
+    position:fixed;
+    width: 100%;
+    height:60px; 
+    background: #fff;
+    z-index:2000;
+    border:1px solid #ddd;
+  }
+
+  .el-header, .el-footer {
+    // background-color: #B3C0D1;
+    color: #333;
+    text-align: center;
+    line-height: 60px;
+  }
+  
+  .el-aside {
+    // background-color: #D3DCE6;
+    color: #333;
+    // text-align: center;
+    line-height: 200px;
+    width:300px;
+    position: fixed;
+    overflow: hidden;
+    margin-top:60px;
+    height: 100%;
+  }
+  
+  .el-main {
+    // background-color: #E9EEF3;
+    padding: 0px;
+    // margin-left:300px;
+  }
+
+  .main{
+    margin-top:60px;
+    background:#ededed;
+  }
+  
+  body > .el-container {
+    margin-bottom: 40px;
+  }
+
+  .sidebar{
+    height: 100%;
+  }
+  
+  .el-container:nth-child(5) .el-aside,
+  .el-container:nth-child(6) .el-aside {
+    line-height: 260px;
+  }
+  
+  .el-container:nth-child(7) .el-aside {
+    line-height: 320px;
+  }
+</style>

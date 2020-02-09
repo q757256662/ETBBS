@@ -1,0 +1,37 @@
+import request from '@/utils/request'
+
+/**获取公告贴 */
+export function getList(params) {
+  return request({
+    url: '/Topic/GetFuncNotice',
+    method: 'get',
+    params
+  })
+}
+
+/**获取我的公告 */
+export function topicList(params) {
+  return request({
+    url: '/mytopic/topicList',
+    method: 'get',
+    params
+  })
+}
+
+/**移动帖子 */
+export function movetopic(data) {
+  return request({
+    url: '/mytopic/movetopic',
+    method: 'post',
+    data
+  })
+}
+
+/**修改限制分 */
+export function modifyscore(data) {
+  return request({
+    url: '/mytopic/modifyscore',
+    method: 'post',
+    data
+  })
+}

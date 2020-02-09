@@ -1,0 +1,272 @@
+<template>
+    <div class="topic-count">
+        <!-- statistics 统计信息 -->
+        <div class="left">
+            <div class="FCountPie">
+                <line-chart :chart-data="lineChartData"></line-chart>
+            </div>
+            <div class="FCountPie">
+                <line-marker :chart-data="lineFChartData"></line-marker>
+            </div>
+            <div class="FCountPie">
+                <line-marker1 :chart-data="lineHChartData"></line-marker1>
+            </div>
+        </div>
+        <div class="right">
+            <div class="FCountPie">
+                <line-marker2 :chart-data="lineBChartData"></line-marker2>
+            </div>
+            <div class="chart-table">
+                <el-table :data="tableData" :row-class-name="tableRowClassName" max-height="450">
+                    <el-table-column fixed prop="UserName" label="用户" width="150">
+                          <template slot-scope="scope">
+                          <a style="color:#409EFF">{{scope.row.UserName }}</a>  
+                            <!-- {{scope.row.CompanyName}} -->
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="CompanyName" label="公司名">
+                        <template slot-scope="scope">
+                          <a >{{scope.row.CompanyName | SubStringCompany}}</a>  
+                            <!-- {{scope.row.CompanyName}} -->
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="PostCount" label="发帖" width="120">
+                    </el-table-column>
+                    <el-table-column prop="RepCount" label="回帖" width="120">
+                    </el-table-column>
+                    <el-table-column prop="ToBeCount" label="未处理" width="120">
+                    </el-table-column>
+                    <el-table-column prop="NewTopicCount" label="未查看" width="120">
+                    </el-table-column>
+                    <el-table-column prop="InvitationCount" label="邀请您回答" width="120">
+                    </el-table-column>
+                    <el-table-column prop="LastLoginDay" label="未上线时间" width="120">
+                        <template slot-scope="scope">
+                            {{scope.row.LastLoginDay | LoginTime}}
+                        </template>
+                    </el-table-column>
+            </el-table>
+        </div>
+   </div>
+       
+    </div>
+</template>
+<style>
+    .el-table .warning-row {
+        background: oldlace;
+    }
+    .el-table .success-row {
+        background: #a2d089;
+    }
+</style>
+<script>
+    import {
+        GetTopicCount,
+        GetPostCount,
+        GetReplyCount,
+        GetAverageCount
+    } from '@/api/Charts'
+    import {
+        formatTime
+    } from '@/utils/index'
+    import lineMarker from '@/components/Charts/FtopicCountPie.vue' //发帖
+    import lineMarker1 from '@/components/Charts/HtopicCountPie.vue' //回帖
+    import lineMarker2 from '@/components/Charts/topicCountBar.vue' //柱图
+    import LineChart from '@/components/Charts/topicCountPie.vue' //总贴数饼图
+    export default {
+        components: {
+            lineMarker,
+            lineMarker1,
+            lineMarker2,
+            LineChart,
+        },
+        data() {
+            return {
+                lineChartData: null, //总数
+                lineFChartData: null, //发帖
+                lineHChartData: null, //回帖
+                lineBChartData: [], //柱状图平均
+                loadingChart: true,
+                tableData: []
+            }
+        },
+        created() {
+            this.getList()
+            this.getFList()
+            this.getHList()
+            this.getAList()
+            // this.getBarList()
+        },
+        filters: {
+            SubStringCompany(row) {
+                let str = row
+                if(row!=null&&row.indexOf("（")!=-1){
+                    str = row.replace("（", "").replace("）", "").substring(0, 2)
+                }
+                return str
+                // this.barname.push(item.CompanyName.replace("（", "").replace("）", "").substring(0, 2))
+            },
+            LoginTime(time) {
+                const d = new Date(time)
+                const now = Date.now()
+                const diff = (now - d) / 1000
+                if (diff < 30) {
+                    return '刚刚'
+                } else if (diff < 3600) { // less 1 hour
+                    return Math.ceil(diff / 60) + '分钟前'
+                } else if (diff < 3600 * 24) {
+                    return Math.ceil(diff / 3600) + '小时前'
+                } else if (diff < 3600 * 24 * 2) {
+                    return '1天前'
+                } else {
+                    return parseInt(diff / (3600 * 24)) + '天'
+                }
+                // else if(diff < 3600 * 24 * 7){
+                // return '1周前'
+                // }else if(diff < 3600 * 24 * 15){
+                // return '半个月前'
+                // }else if(diff < 3600 * 24 * 30){
+                // return '1个月前'
+                // }else if(diff < 3600 * 24 * 30 * 6){
+                // return '半年前'
+                // }else if(diff < 3600 * 24 * 30 * 12){
+                // return '1年前'
+                // }
+                // else if(diff < 3600 * 24 * 30 * 12 * 2){
+                // return '2年前'
+                // } else if(diff < 3600 * 24 * 30 * 12 * 3){
+                // return '3年前'
+                // }
+                {
+                    // return d.getFullYear()+'/'+(d.getMonth() + 1) + '/' + d.getDate() + ' ' + d.getHours() + ':' + d.getMinutes()
+                    // return dateFtt("yyyy-MM-dd hh:mm:ss", time)
+                    let fmt = "yyyy-MM-dd hh:mm:ss"
+                    return {
+                        dateFtt(fmt, time) { //author: meizz   
+                            const date = new Date(time)
+                            var o = {
+                                "M+": date.getMonth() + 1, //月份   
+                                "d+": date.getDate(), //日   
+                                "h+": date.getHours(), //小时   
+                                "m+": date.getMinutes(), //分   
+                                "s+": date.getSeconds(), //秒   
+                                "q+": Math.floor((date.getMonth() + 3) / 3), //季度   
+                                "S": date.getMilliseconds() //毫秒   
+                            };
+                            if (/(y+)/.test(fmt))
+                                fmt = fmt.replace(RegExp.$1, (date.getFullYear() + "").substr(4 - RegExp.$1.length));
+                            for (var k in o)
+                                if (new RegExp("(" + k + ")").test(fmt))
+                                    fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+                            return fmt;
+                        }
+                    }
+                }
+            },
+        },
+        methods: {
+            //总数
+            getList() {
+                GetTopicCount().then(res => {
+                    if (res.Success == true) {
+                        this.lineChartData = res;
+                        this.loadingChart = false;
+                        localStorage.setItem('lineChartData', JSON.stringify(res))
+                    } else {
+                        this.$message({
+                            showClose: true,
+                            message: res.tip,
+                            type: 'error'
+                        });
+                        this.loadingChart = false;
+                    }
+                })
+            },
+            //发帖
+            getFList() {
+                GetPostCount().then(res => {
+                    if (res.Success == true) {
+                        this.lineFChartData = res;
+                        this.lineBChartData = res.Data;
+                        this.loadingChart = false;
+                        localStorage.setItem('lineFChartData', JSON.stringify(res))
+                    } else {
+                        this.$message({
+                            showClose: true,
+                            message: res.tip,
+                            type: 'error'
+                        });
+                        this.loadingChart = false;
+                    }
+                })
+            },
+            //回帖
+            getHList() {
+                GetReplyCount().then(res => {
+                    if (res.Success == true) {
+                        this.lineHChartData = res;
+                        // this.lineBChartData.repCount = res;
+                        this.loadingChart = false;
+                        localStorage.setItem('lineBChartData', JSON.stringify(res))
+                        localStorage.setItem('lineHChartData', JSON.stringify(res))
+                    } else {
+                        this.$message({
+                            showClose: true,
+                            message: res.tip,
+                            type: 'error'
+                        });
+                        this.loadingChart = false;
+                    }
+                })
+            },
+            getAList() {
+                GetAverageCount().then(res => {
+                    if (res.Success == true) {
+                        this.tableData = res.Data;
+                        this.loadingChart = false;
+                    } else {
+                        this.$message({
+                            showClose: true,
+                            message: res.tip,
+                            type: 'error'
+                        });
+                        this.loadingChart = false;
+                    }
+                })
+            },
+            tableRowClassName({
+                row,
+                rowIndex
+            }) {
+                if (row.UserName == this.$store.state.user.userinfo.name) {
+                    return 'success-row';
+                } else {
+                    return '';
+                }
+            }
+        }
+    }
+</script>
+<style rel="stylesheet/scss" lang="scss" scoped>
+    // .el-table .success-row {
+    //     background-color: "red" !important;
+    // }
+    // .topic-count {
+    //     margin-top: 15px;
+    //     padding: 15px;
+    //     display: flex;
+    //     flex-direction: row;
+    // }
+    // .left {
+    //     display: flex;
+    //     flex-direction: column;
+    // }
+    // .right {
+    //     margin-left: 25px;
+    // }
+    .FCountPie{
+        background:#fff;
+        margin:10px 0;
+        padding:10px;
+    }
+</style>

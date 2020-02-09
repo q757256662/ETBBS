@@ -1,0 +1,34 @@
+<template>
+  <div class="mytask-container">
+    <el-tabs type="border-card">
+      <el-tab-pane label="新话题">新话题</el-tab-pane>
+      <el-tab-pane label="待解决">待解决</el-tab-pane>
+      <el-tab-pane label="旧话题">旧话题</el-tab-pane>
+      <el-tab-pane label="草稿帖">草稿帖</el-tab-pane>
+    </el-tabs>
+  </div>
+</template>
+<script>
+  import {
+    GetNewTopic
+  } from '@/api/mytask.js';
+  export default {
+
+  }
+
+</script>
+
+
+<style rel="stylesheet/scss" lang="scss" scoped>
+  .mytask {
+    &-container {
+      margin: 30px;
+    }
+
+    &-text {
+      font-size: 30px;
+      line-height: 46px;
+    }
+  }
+
+</style>
