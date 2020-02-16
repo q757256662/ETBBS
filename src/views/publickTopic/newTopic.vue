@@ -18,8 +18,6 @@
         <router-link
           :class="{'border-item':true,'border-striped':index%2==0}"
           :to="'/TopicSingle?topicId='+item.Id"
-          tag="a"
-          target="_blank"
         >
           <TopicItem :item="item" :flashTopic="getList"></TopicItem>
         </router-link>
@@ -100,7 +98,7 @@ export default {
     }
   },
   created() {
-    // this.getList();
+    this.getList();
   },
   methods: {
     /**取消提醒 */

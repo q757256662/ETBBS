@@ -21,10 +21,11 @@ import '@/icons' // icon
 import '@/permission' // permission control 路由匹配规则
 
 import './directive/dialogDrag'; //放大模态框
-
+import VueBus from 'vue-bus'
 Vue.use(ElementUI, { locale })
 Vue.prototype.$http = axios;
 Vue.prototype.$axios = axios;
+Vue.use(VueBus)
 
 String.prototype.trim = function () {
   return this.replace(/(^\s*)|(\s*$)/g, "");

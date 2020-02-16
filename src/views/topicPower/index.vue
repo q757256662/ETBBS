@@ -12,7 +12,6 @@
           suffix-icon="el-icon-search"
           @keyup.enter.native="handleSearch"
           v-model="queryList.queryStr"
-        
           auto-complete="off"
           size="small"
         ></el-input>
@@ -24,7 +23,6 @@
         v-for="(item,index) in newTopicList"
         :key="item.Id"
         :class="{'border-item':true,'border-striped':index%2==0}"
-        tag="a" target="_blank" 
       >
         <TopicItem :item="item" :flashTopic="getList"></TopicItem>
       </router-link>
@@ -62,7 +60,7 @@ export default {
   data() {
     return {
       newTopicList: [], //新话题的列表
-      total: 0, //总条数
+      total: 100, //总条数
       CurrentTab: "updateProgram", //当前tab位置
       queryList: {
         pageIndex: 1, //当前页数
@@ -100,7 +98,11 @@ export default {
     }
   },
   created() {
-    // this.getList();
+    this.queryList.pageIndex = Number(this.$route.query.pageIndex)||1
+    this.queryList.queryStr = this.$route.query.queryStr||""
+
+    // this.queryList = {...this.queryList,...this.$route.query}
+    this.getList();
   },
   methods: {
     getList() {
@@ -108,7 +110,6 @@ export default {
       // console.log(this.queryList)
       getList(this.queryList).then(res => {
         this.loadingState = false;
-
         if (res.Success) {
           this.newTopicList = res.Data.Rows;
           this.total = res.Data.Total;
@@ -117,6 +118,10 @@ export default {
     },
     //查询
     handleSearch(){
+      // console.log()
+      this.$router.push({
+        query: { ...this.queryList }
+      });
       // if(this.queryList.queryStr){
           this. getList() ;
       // }else{

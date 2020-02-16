@@ -3,9 +3,9 @@
     <el-pagination
       @size-change="handleSizeChange"
       @current-change="handleCurrentChange"
-      :current-page.sync="listQuery.pageIndex"
+      :current-page.sync="newPage.pageIndex"
       :page-sizes="[10,20,30,50]"
-      :page-size="listQuery.pageSize"
+      :page-size="newPage.pageSize"
       layout="total, sizes, prev, pager, next"
       :total="total"
     ></el-pagination>
@@ -17,24 +17,24 @@ export default {
   props: {
     total: {
       type: Number,
-      default: 0
+      default: 1000
     },
     listQuery: {
-      type: Object
-      // required: true
+      type: Object,
+      default:{}
     }
   },
   data() {
     return {
       pageSize: 0,
-      newPageIndex:0
+      newPageIndex:0,
+      newPage:{}
     };
   },
 
   methods: {
     /**一页展示多少条数据 */
     handleSizeChange(val) {
-      // console.log(val)
       this.listQuery.pageSize = val;
       localStorage.setItem("totalPage", val);
       this.listQuery.pageIndex = 1;
@@ -49,6 +49,17 @@ export default {
         query: { pageIndex: val }
       });
       this.$emit("PageChange", this.listQuery);
+    }
+  },
+  watch:{
+    listQuery:{
+      immediate: true,    // 这句重要
+      handler (val) {
+          // this.newPageIndex = val.pageIndex
+          this.newPage = val
+      }
+    },
+    newPageIndex(n){
     }
   },
   mounted() {
@@ -69,12 +80,14 @@ export default {
       localStorage.setItem("totalPage", 50);
       this.pageSize = 50;
     }
+    // console.log(this.pageSize)
+    // console.log(this.newPageIndex)
     this.listQuery.pageSize = this.pageSize;
     // if (this.$route.name !== "mytask") {
       // console.log({...this.listQuery,...{pageIndex:this.newPageIndex}})
       let newList = {...this.listQuery,...{pageIndex:this.newPageIndex}}
-      console.log(newList)
-      this.$emit("PageChange", newList);
+      // console.log(newList)
+      // this.$emit("PageChange", newList);
     // }
 
     // localStorage.setItem('currentPageName',)

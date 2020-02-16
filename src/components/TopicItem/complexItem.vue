@@ -11,7 +11,8 @@
           <p class="title" :title="topicItem.FirstContent">{{topicItem.Title}}</p>
           <p class="topic-info">
             <!-- <router-link class="author" to="/"> -->
-            <span class="bottom-name" style="width:50px;">{{topicItem.CreateName}}</span>
+            <span class="bottom-name" style="width:50px;text-align:center" v-if="topicItem.CreaterState==0"></span>
+            <span class="bottom-name" style="width:50px;" v-else>{{topicItem.CreateName}}</span>
             <!-- </router-link> -->
             <span
               class="bottom-name"
@@ -63,12 +64,10 @@
         <span class="line" :style="{borderLeft: `4px solid ${topicItem.Color}`}"></span>
         <div class="post">
           <span>
-            <p>
+            <p v-if="topicItem.Reply.state==1">
               <i class="icon icarus icon-reply"></i>
               {{topicItem.Reply.name}}
             </p>
-            <!-- <p class="content" v-text="topicItem.Reply.contents" :title="topicItem.Reply.contents">
-            </p>-->
           </span>
           <div class="time">{{topicItem.Reply.time}}</div>
         </div>

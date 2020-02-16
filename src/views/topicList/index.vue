@@ -19,7 +19,12 @@
       </el-form-item>
       <el-form-item label>
         <el-tooltip class="item" effect="light" content="发帖人属于的公司" placement="top">
-          <el-select v-model="SubmitQuery.companyId" @change="chageCompany" placeholder="发帖人属于的公司">
+          <el-select
+            v-model="SubmitQuery.companyId"
+            @change="chageCompany"
+            placeholder="发帖人属于的公司"
+            filterable
+          >
             <el-option-group label="发帖人属于的公司">
               <el-option label="（全选）" :value="0"></el-option>
               <el-option
@@ -34,7 +39,12 @@
       </el-form-item>
       <el-form-item label>
         <el-tooltip class="item" effect="light" content="回复人" placement="top">
-          <el-select v-model="SubmitQuery.replyUserId" @change="chageReplyUser" placeholder="回复人">
+          <el-select
+            v-model="SubmitQuery.replyUserId"
+            @change="chageReplyUser"
+            placeholder="回复人"
+            filterable
+          >
             <el-option-group label="回复人">
               <el-option label="（全选）" :value="0"></el-option>
               <el-option
@@ -85,8 +95,6 @@
       <a
         :class="{'board-item-box':true,'border-striped':index%2==0}"
         v-for="(item,index) in newTopicList"
-        tag="a"
-        target="_blank"
         :key="item.id"
         @click="routerLink(item)"
       >
@@ -220,7 +228,7 @@ export default {
   data() {
     return {
       newTopicList: [], //新话题的列表
-      total: 0, //总条数
+      total: 1000, //总条数
       colorBox: {
         ULSG打推: "#FB966E",
         ET打推: "rgb(64, 158, 255)",
@@ -272,21 +280,28 @@ export default {
     };
   },
   watch: {},
-  created() {
+  async created() {
+    console.log(this.$route.query)
     this.SubmitQuery.topicDetail = this.$route.params.topicDetail || "";
     this.showNoBtn =
       this.$store.state.user.userinfo.CompanyName ==
       "（开发）深圳市布易科技有限公司";
     // console.log(this.showNoBtn);
-    this.LoadCondition();
+    await this.LoadCondition()
     this.getTagList();
     // console.log(this.$store.state.user);
     this.roleState = this.$store.state.user.userinfo.Role;
     this.createUId = this.$store.state.user.userinfo.id;
-    // this.handleClickSearch();
+    this.queryList.pageIndex = Number(this.$route.query.pageIndex) || 1;
+    this.queryList.pageSize = Number(localStorage.getItem("totalPage")) || 50;
+    // console.log(this.$route.query)
+    this.SubmitQuery.companyId = Number(this.$route.query.companyId) || 0;
+    this.SubmitQuery.replyUserId = Number(this.$route.query.replyUserId) || 0;
+    this.SubmitQuery.topicDetail = this.$route.query.topicDetail || "";
+    this.SubmitQuery.topicState = Number(this.$route.query.topicState || -1);
+    this.SubmitQuery.topicType = this.$route.query.topicType || "";
+    this.handleClickSearch();
   },
-  computed: {},
-  mounted() {},
   methods: {
     handleMark(item) {
       MarkTopic(item).then(res => {
@@ -366,18 +381,22 @@ export default {
 
     /*状态 */
     chageState(e) {
+      this.queryList.pageIndex = 1;
       this.handleClickSearch();
     },
     /*//帖子类型 */
     chageTopicType(e) {
+      this.queryList.pageIndex = 1;
       this.handleClickSearch();
     },
     /*//回复人 */
     chageReplyUser(e) {
+      this.queryList.pageIndex = 1;
       this.handleClickSearch();
     },
     /*/选择的公司*/
     chageCompany(e) {
+      this.queryList.pageIndex = 1;
       this.handleClickSearch();
     },
 
@@ -392,15 +411,19 @@ export default {
     },
     //加载搜索条件
     LoadCondition() {
-      LoadQueryCondition().then(res => {
-        if (res.Success) {
-          this.ConditionQuery = { ...res.Data, ...this.ConditionQuery };
-        } else {
-          this.$message({
-            message: res.ErrMes,
-            type: "error"
-          });
-        }
+      return new Promise((resolve, reject) => {
+        LoadQueryCondition().then(res => {
+          if (res.Success) {
+            this.ConditionQuery = { ...res.Data, ...this.ConditionQuery };
+            resolve()
+          } else {
+            this.$message({
+              message: res.ErrMes,
+              type: "error"
+            });
+            reject(res.ErrMes)
+          }
+        });
       });
     },
     //加载没人管的帖子
@@ -448,6 +471,9 @@ export default {
     handleClickSearch() {
       this.loadingState = true;
       this.showDefault = false;
+      this.$router.push({
+        query: { ...this.SubmitQuery, ...this.queryList }
+      });
       GetTopicList({ ...this.SubmitQuery, ...this.queryList }).then(res => {
         this.loadingState = false;
         if (res.Success) {
@@ -480,7 +506,7 @@ export default {
               }
               return el;
             });
-          this.total = res.Data.Total;
+          this.total = res.Data.Total||0
         } else {
           this.$message({
             message: res.ErrMes,
@@ -489,33 +515,22 @@ export default {
         }
       });
     },
-    // 分页
-    handlePageChange(page) {
-      this.queryList.pageIndex = page;
-      this.handleClickSearch();
-    },
-    //分页
-    handleSizeChange(val) {
-      this.queryList.pageSize = val;
-      this.queryList.pageIndex = 1;
-      this.handleClickSearch();
-    },
     // 路由跳转函数
     routerLink(obj) {
       // console.log('点击了');
       // console.log(obj);
-      var routeData = this.$router.resolve({
+      var routeData = this.$router.push({
         name: "TopicSingle",
         query: {
           topicId: obj.id
         }
       });
-      let arr = routeData.href.split("?")
-      
-      let href = arr[0].substring(0,arr[0].length-1)+'?'+arr[1]
+      // let arr = routeData.href.split("?")
+
+      // let href = arr[0].substring(0,arr[0].length-1)+'?'+arr[1]
       // console.log(href)
       // console.log(href+'?'+arr[1])
-      window.open(href, "_blank");
+      // window.open(href, "_blank");
       // this.$router.push({
       //   // path: '/TopicSingle',
       //   name: 'TopicSingle',

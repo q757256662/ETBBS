@@ -4,7 +4,16 @@
     <div class="Topic_container">
       <div class="QuestionHeader">
         <div class="list_header">
-          <div>
+          <div  v-if="titleDetails.UserState==0">
+            <p
+              class="avator-color"
+              :style="{background:onSelectColor(titleDetails.Name)}"
+            > </p>
+            <div class="user_detail">
+              <div></div>
+            </div>
+          </div>
+          <div v-else> 
             <p
               class="avator-color"
               :style="{background:onSelectColor(titleDetails.Name)}"
@@ -80,7 +89,7 @@
               >结贴</el-button>
               <el-button
                 @click="handleResultTopicToNotice(titleDetails)"
-                v-if="userInfo.id==titleDetails.User_Id&&userInfo.Role=='管理员'"
+                v-if="userInfo.id==titleDetails.User_Id&&userInfo.Role=='管理员'&&userInfo.company_Id==1"
                 type="info"
                 plain
               >转为公告贴</el-button>
@@ -92,13 +101,22 @@
         <div class="list-body">
           <div class="list_header-list">
             <!-- <img src="static/img/herder.png" alt /> -->
-            <div>
+            <div v-if="item.UserState==1">
               <p
                 class="avator-color"
                 :style="{background:onSelectColor(item.Name)}"
               >{{!!item.Name&&item.Name.substring(0,1)}}</p>
               <div class="user_detail">
                 <div>{{item.Name}}</div>
+              </div>
+            </div>
+            <div v-else>
+              <p
+                class="avator-color"
+                :style="{background:onSelectColor(item.Name)}"
+              ></p>
+              <div class="user_detail">
+                <div></div>
               </div>
             </div>
             <!-- <img src="src/assets/imgs/user.jpg" alt /> -->
@@ -599,7 +617,8 @@ export default {
               // this.$router.push({ path: "mytask" });
               setTimeout(() => {
                 // window.colse()
-                window.close();
+                // window.close();
+                history.back(-1)
               }, 1000);
             } else {
               this.$message.warning(res.ErrMes);

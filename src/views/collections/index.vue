@@ -73,7 +73,7 @@ export default {
   data() {
     return {
       tableData: [], //列表
-      total: 0, //总条数
+      total: 1000, //总条数
       queryList: {
         pageSize: 10, //当前页数
         pageIndex: 1 //一页显示的条数
@@ -83,7 +83,8 @@ export default {
     };
   },
   created() {
-    // this.getMyCollect();
+    this.queryList.pageIndex = Number(this.$route.query.pageIndex)||1
+    this.getMyCollect();
   },
   filters: {
     formatTime(str) {

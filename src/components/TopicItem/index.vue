@@ -190,7 +190,7 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
   width: 100%;
-  width: 630px;
+  // width: 630px;
 }
 .title-recent {
   margin-left: 18px;

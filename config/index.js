@@ -25,8 +25,15 @@ module.exports = {
       //     '^/ETBBS': ''
       //   },
       // },
+      // '/ETBBS': {
+      //   target: 'http://win2008:2222',
+      //   changeOrigin: true,
+      //   pathRewrite: {
+      //     '^/ETBBS': '/ETBBS'
+      //   },
+      // },
       '/ETBBS': {
-        target: 'http://win2008:2222',
+        target: 'http://bbs_test.etsystem.cn',
         changeOrigin: true,
         pathRewrite: {
           '^/ETBBS': '/ETBBS'

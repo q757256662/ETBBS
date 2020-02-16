@@ -176,9 +176,7 @@ export default {
       join({ topicId: this.currentTopic }).then(res => {
         if(res.Success){
           this.$message.success("加入成功")
-          console.log(this.viewStateData.IsJoin)
           this.viewStateData.IsJoin = !this.viewStateData.IsJoin
-          console.log(this.viewStateData.IsJoin)
 
         }else{
           this.$message.warning(res.ErrMes)
@@ -191,7 +189,7 @@ export default {
         if(res.Success){
           this.$message.success("退出成功")
           setTimeout(()=>{
-            window.close()
+            history.back(-1)
           },1000)
         }else{
           this.$message.warning(res.ErrMes)
@@ -363,7 +361,8 @@ export default {
         if (res.Success) {
           this.$message.success("成功");
           setTimeout(() => {
-            window.close();
+            // window.close();
+            history.back(-1)
           }, 1000);
         } else {
           this.$message.warning(res.ErrMes);

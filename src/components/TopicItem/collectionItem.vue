@@ -1,5 +1,5 @@
 <template>
-  <router-link :to="'/TopicSingle?topicId='+topicItem.TopicId" tag="a" target="_blank" >
+  <router-link :to="'/TopicSingle?topicId='+topicItem.TopicId" >
     <div class="board-item" @click="handleRoute">
     <div class="title-recent">
       <div class="avatar" :style="{background:topicItem.Color}" @click.stop.prevent="handleCheck">

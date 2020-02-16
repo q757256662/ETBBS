@@ -1,36 +1,43 @@
 <template>
   <!-- Delevopment开发部公告 -->
-  <div class="delevopment-cantainer" >
-       <div class="fun-search">
-    <!-- <el-switch 
+  <div class="delevopment-cantainer">
+    <div class="fun-search">
+      <!-- <el-switch 
   class="fun-swicth"
   title="是否全文搜索"
   v-model="value"
   active-color="#13ce66"
   inactive-color="#ff4949">
-</el-switch> -->
- <el-checkbox class="fun-swicth" v-model="queryList.isAllContent">全文搜索</el-checkbox>
+      </el-switch>-->
+      <el-checkbox class="fun-swicth" v-model="queryList.isAllContent">全文搜索</el-checkbox>
       <el-input
-          class="search"
-          placeholder="请输入帖子标题或关键字"
-          suffix-icon="el-icon-search"
-          @keyup.enter.native="handleSearch"
-          v-model="queryList.queryStr"
-          title="按下回车键搜索"
-          auto-complete="off"
-         
-        ></el-input>
-        
+        class="search"
+        placeholder="请输入帖子标题或关键字"
+        suffix-icon="el-icon-search"
+        @keyup.enter.native="handleSearch"
+        v-model="queryList.queryStr"
+        title="按下回车键搜索"
+        auto-complete="off"
+      ></el-input>
     </div>
-    <el-tabs type="border-card" v-model="CurrentTab" class="tabs" ref="tabs" >
-      <el-tab-pane label="程序更新" name="updateProgram" :disabled="tagDisabled" v-loading="listLoading">
+    <el-tabs
+      type="border-card"
+      v-model="CurrentTab"
+      class="tabs"
+      ref="tabs"
+      @tab-click="handleClickTab(CurrentTab)"
+    >
+      <el-tab-pane
+        label="程序更新"
+        name="updateProgram"
+        :disabled="tagDisabled"
+        v-loading="listLoading"
+      >
         <router-link
           :class="{'board-item-box':true,'border-striped':index%2==0}"
           :to="'/TopicSingle?topicId='+item.Id"
           v-for="(item,index) in newTopicList"
           :key="item.Id"
-          tag="a"
-          target="_blank"
         >
           <TopicItem :item="item" :flashTopic="getList"></TopicItem>
         </router-link>
@@ -41,8 +48,6 @@
           :class="{'board-item-box':true,'border-striped':index%2==0}"
           :to="'/TopicSingle?topicId='+item.Id"
           v-for="(item,index) in newTopicList"
-          tag="a"
-          target="_blank"
           :key="item.Id"
         >
           <TopicItem :item="item" :flashTopic="getList"></TopicItem>
@@ -54,22 +59,24 @@
           :class="{'board-item-box':true,'border-striped':index%2==0}"
           :to="'/TopicSingle?topicId='+item.Id"
           v-for="(item,index) in newTopicList"
-          tag="a"
-          target="_blank"
           :key="item.Id"
         >
           <TopicItem :item="item" :flashTopic="getList"></TopicItem>
         </router-link>
         <noItem v-if="newTopicList.length==0"></noItem>
       </el-tab-pane>
-      <el-tab-pane label="搜索结果" v-if="showSeach == true" name="search" :disabled="tagDisabled" v-loading="listLoading">
+      <el-tab-pane
+        label="搜索结果"
+        v-if="showSeach == true"
+        name="search"
+        :disabled="tagDisabled"
+        v-loading="listLoading"
+      >
         <router-link
           :class="{'board-item-box':true,'border-striped':index%2==0}"
           :to="'/TopicSingle?topicId='+item.Id"
           v-for="(item,index) in newTopicList"
           :key="item.Id"
-          tag="a"
-          target="_blank"
         >
           <TopicItem :item="item" :flashTopic="getList"></TopicItem>
         </router-link>
@@ -107,44 +114,92 @@ export default {
   data() {
     return {
       newTopicList: [], //新话题的列表
-      total: 0, //总条数
+      total: 100, //总条数
       CurrentTab: "updateProgram", //当前tab位置
       queryList: {
         pageIndex: 1, //当前页数
         pageSize: 10, //一页显示的条数
         group: 1,
-        queryStr:'',
-        isAllContent:false,
-
+        queryStr: "",
+        isAllContent: false
       },
       tagDisabled: false,
       listLoading: false,
-      showSeach:false,
+      showSeach: false
     };
   },
   watch: {
-    CurrentTab(newValue, oldValue) {
+    // CurrentTab(newValue, oldValue) {
+    //   let group = null;
+    //   if (newValue == "updateProgram") {
+    //     group = 1;
+    //     this.queryList.queryStr = "";
+    //   } else if (newValue == "question") {
+    //     group = 2;
+    //     this.queryList.queryStr = "";
+    //   } else if (newValue == "other") {
+    //     group = 0;
+    //     this.queryList.queryStr = "";
+    //   } else if (newValue == "search") {
+    //     group = 0;
+    //     this.queryList.queryStr = localStorage.getItem("queryStr");
+    //   } else {
+    //     group = null;
+    //   }
+    //   this.ResetQueryList(group)
+    //     .then(res => {
+    //       if (group == -1) {
+    //         return;
+    //       }
+    //       this.getList();
+    //     })
+    //     .catch(err => {
+    //       if (this.queryList.group == null) {
+    //         this.$message({
+    //           message: "状态错误",
+    //           type: "error"
+    //         });
+    //         return false;
+    //       }
+    //     });
+    // }
+  },
+  created() {
+    this.CurrentTab = localStorage.getItem('Delevopment')||'updateProgram'
+    this.queryList.pageIndex = Number(this.$route.query.pageIndex) || 1;
+    this.queryList.group = this.$route.query.group==undefined?1:Number(this.$route.query.group)
+    this.queryList.queryStr = this.$route.query.queryStr || "";
+    this.queryList.isAllContent = this.$route.query.isAllContent || false;
+    if(this.queryList.queryStr!=''){
+      this.handleSearch()
+    }
+    this.getList();
+  },
+  methods: {
+    /**tab点击事件 */
+    handleClickTab(newValue) {
+      console.log(newValue)
       let group = null;
+      localStorage.setItem('Delevopment',newValue)
       if (newValue == "updateProgram") {
         group = 1;
-        this.queryList.queryStr='';
+        this.queryList.queryStr = "";
       } else if (newValue == "question") {
         group = 2;
-         this.queryList.queryStr='';
-      } else if ((newValue == "other")) {
+        this.queryList.queryStr = "";
+      } else if (newValue == "other") {
         group = 0;
-        this.queryList.queryStr='';
-      }  else if ((newValue == "search")) {
+        this.queryList.queryStr = "";
+      } else if (newValue == "search") {
         group = 0;
-        this.queryList.queryStr = localStorage.getItem('queryStr');
-      }
-      else {
+        this.queryList.queryStr = localStorage.getItem("queryStr");
+      } else {
         group = null;
       }
       this.ResetQueryList(group)
         .then(res => {
-          if(group == -1){
-           return;
+          if (group == -1) {
+            return;
           }
           this.getList();
         })
@@ -157,15 +212,13 @@ export default {
             return false;
           }
         });
-    }
-  },
-  created() {
-    // this.getList();
-  },
-  methods: {
+    },
     getList() {
       this.tagDisabled = true;
       this.listLoading = true;
+      this.$router.push({
+        query:{...this.queryList}
+      })
       GetList(this.queryList).then(res => {
         this.tagDisabled = false;
         this.listLoading = false;
@@ -186,20 +239,18 @@ export default {
         }
       });
     },
-    handleSearch(){
-      
-      if(this.queryList.queryStr){
-      this.showSeach = true;
-      this.CurrentTab ='search';
-      localStorage.setItem('queryStr',this.queryList.queryStr);
-      this.getList();
-      }else{
+    handleSearch() {
+      if (this.queryList.queryStr) {
+        this.showSeach = true;
+        this.CurrentTab = "search";
+        localStorage.setItem("queryStr", this.queryList.queryStr);
+        this.getList();
+      } else {
         this.$message({
-        message: "请输入查询条件!",
-        type: "warning"
-      });
+          message: "请输入查询条件!",
+          type: "warning"
+        });
       }
-      
     },
     handlePageChange(page) {
       this.queryList.pageIndex = page;
@@ -231,21 +282,21 @@ export default {
 .border-striped {
   background: #ededed;
 }
-.delevopment-cantainer{
+.delevopment-cantainer {
   position: relative;
 }
-.fun-search{
+.fun-search {
   position: absolute;
   top: 0px;
   right: 0px;
   z-index: 2;
   width: 250px;
 }
-.fun-swicth{
-    position: absolute;
-    top: 9px;
-    width: 50px;
-    left: -90px;
-    // left: -41px;
+.fun-swicth {
+  position: absolute;
+  top: 9px;
+  width: 50px;
+  left: -90px;
+  // left: -41px;
 }
 </style>
