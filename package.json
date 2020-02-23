@@ -21,6 +21,7 @@
     "normalize.css": "7.0.0",
     "nprogress": "^0.2.0",
     "qrcodejs2": "0.0.2",
+    "sass": "^1.25.0",
     "viewerjs": "^1.4.0",
     "vue": "2.5.10",
     "vue-bus": "^1.2.1",

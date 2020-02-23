@@ -50,9 +50,7 @@
       <el-form-item label="限制分">
         <el-input v-model="SubmitForm.Score" type="number"></el-input>
       </el-form-item>
-      <el-form-item label="自定义关键词">
-        <el-input placeholder="请输入关键字" v-model="KeyName"></el-input>
-      </el-form-item>
+      
       <el-form-item prop="Phone" maxlength="11" label="师傅手机号">
         <el-input v-model="SubmitForm.Phone"></el-input>
         <el-button type="primary" @click="checkPhone">检查手机号</el-button>
@@ -75,6 +73,9 @@
           ></el-option>
         </el-select>
         <el-button type="primary" @click="copyTopic">复制到编辑器</el-button>
+      </el-form-item>
+      <el-form-item label="自定义关键词">
+        <el-input placeholder="请输入关键字" v-model="KeyName"></el-input>
       </el-form-item>
       <el-form-item label="关键词" class="keyword-class" prop="checkedKeyword">
         <!-- <el-select v-model="checkedKeyword" multiple allow-create default-first-option filterable collapse-tags>

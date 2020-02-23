@@ -50,9 +50,7 @@
       <el-form-item label="限制分">
         <el-input v-model="SubmitForm.Score" type="number"></el-input>
       </el-form-item>
-      <el-form-item label="自定义关键词">
-        <el-input placeholder="请输入关键字" v-model="KeyName"></el-input>
-      </el-form-item>
+      
       <el-form-item prop="Phone" maxlength="11" label="师傅手机号">
         <el-input v-model="SubmitForm.Phone">
           <!-- <el-button  icon="el-icon-search"></el-button> -->
@@ -76,6 +74,9 @@
             :value="item.TopicId+'|'+item.TopicTitle"
           ></el-option>
         </el-select>
+      </el-form-item>
+      <el-form-item label="自定义关键词">
+        <el-input placeholder="请输入关键字" v-model="KeyName"></el-input>
       </el-form-item>
       <el-form-item label="关键词" class="keyword-class" prop="checkedKeyword">
         <el-checkbox-group v-model="checkedKeyword">

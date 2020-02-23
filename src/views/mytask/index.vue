@@ -202,8 +202,10 @@ export default {
   methods: {
     /**初始化数据 */
     initData() {
+      // console.log(localStorage.getItem("totalPage")||50)
       if (Cookies.get("currentState") == undefined) {
         this.CurrentTab = "NewTopic";
+        Cookies.set('currentState','NewTopic')
       } else {
         this.CurrentTab = Cookies.get("currentState");
       }
@@ -237,12 +239,12 @@ export default {
         ...this.queryList,
         ...{
           pageIndex: Number(this.$route.query.pageIndex) || 1,
-          pageSize: Number(localStorage.getItem("totalPage")),
+          pageSize: Number(localStorage.getItem("totalPage")||50),
           ...this.sortConditions[this.CurrentSortCondition]
         }
       };
       this.queryList = {...newList}
-      this.queryList.pageSize = Number(localStorage.getItem("totalPage"));
+      this.queryList.pageSize = Number(localStorage.getItem("totalPage"))||50;
       if (this.CurrentTab == "draft") {
         this.getDraftTopic();
       } else {
