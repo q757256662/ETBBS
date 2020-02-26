@@ -347,9 +347,10 @@ export default {
               this.editorContent = "";
               this.editor.txt.clear();
             } else {
+              this.uploadLoading = false;
               this.$message.warning(res.ErrMes);
             }
-          });
+          })
         }
       });
     },

@@ -145,7 +145,7 @@
               <svg-icon icon-class="arrowdownload"></svg-icon>
               <svg-icon icon-class="bandownload"></svg-icon>
                 </el-button>-->
-                <span size="mini" @click="handleReply(item)" class="withicon-button">
+                <span size="mini" @click="handleReply(item)" class="withicon-button" v-if="loadData.State!=2||userInfo.company_Id == 1">
                   <span v-if="item.IsEdite==0">
                     <svg-icon icon-class="reply"></svg-icon>回复
                   </span>

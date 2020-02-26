@@ -3,17 +3,17 @@
     <!-- statistics 统计信息 -->
     <div class="left">
       <div class="FCountPie">
+        <line-marker :chart-data="lineFChartData"></line-marker>
+      </div>
+      <div class="FCountPie">
+        <line-marker1 :chart-data="lineHChartData"></line-marker1>
+      </div>
+      <div class="FCountPie">
+      </div>
+      <div class="FCountPie">
         <line-chart :chart-data="lineChartData"></line-chart>
       </div>
       <div class="FCountPie">
-        <line-marker :chart-data="lineFChartData"></line-marker>
-      </div>
-    
-     
-        <div class="FCountPie">
-        <line-marker1 :chart-data="lineHChartData"></line-marker1>
-      </div>
-       <div class="FCountPie">
         <line-chart2 :chart-data="nofinishData"></line-chart2>
       </div>
     </div>
@@ -37,11 +37,29 @@
           </el-table-column>
           <el-table-column prop="PostCount" key="PostCount" label="发帖" width="100" sortable></el-table-column>
           <el-table-column prop="RepCount" key="RepCount" label="回帖" width="100" sortable></el-table-column>
-          <el-table-column prop="MyUnFinishTopics" key="MyUnFinishTopics" label="未结帖" width="100" sortable></el-table-column>
+          <el-table-column
+            prop="MyUnFinishTopics"
+            key="MyUnFinishTopics"
+            label="未结帖"
+            width="100"
+            sortable
+          ></el-table-column>
           <el-table-column prop="ToBeCount" key="ToBeCount" label="未处理" width="100" sortable></el-table-column>
-          <el-table-column prop="NewTopicCount" key="NewTopicCount" label="未查看" width="100" sortable></el-table-column>
-          <el-table-column prop="InvitationCount" key="InvitationCount" label="邀请您回答" width="115" sortable></el-table-column>
-          <el-table-column prop="LastLoginDay" key="LastLoginDay" label="未上线时间"  width="120" >
+          <el-table-column
+            prop="NewTopicCount"
+            key="NewTopicCount"
+            label="未查看"
+            width="100"
+            sortable
+          ></el-table-column>
+          <el-table-column
+            prop="InvitationCount"
+            key="InvitationCount"
+            label="邀请您回答"
+            width="115"
+            sortable
+          ></el-table-column>
+          <el-table-column prop="LastLoginDay" key="LastLoginDay" label="未上线时间" width="120">
             <template slot-scope="scope">{{scope.row.LastLoginDay | LoginTime}}</template>
           </el-table-column>
         </el-table>
@@ -186,7 +204,7 @@ export default {
   methods: {
     //修改公司名称
     onPutCompanyName(row) {
-     return row.map(el => {
+      return row.map(el => {
         if (el.CompanyName != null && el.CompanyName.indexOf("（") != -1) {
           // console.log(object);
           el.CompanyName = el.CompanyName.replace("（", "")
@@ -235,7 +253,7 @@ export default {
             // console.log(b)
             return a.TopicCount - b.TopicCount;
           });
-        //   console.log(list);
+          //   console.log(list);
           this.lineFChartData = list;
           this.lineBChartData = this.onPutCompanyName(list.Data);
           // console.log(this.lineBChartData)
@@ -260,8 +278,8 @@ export default {
           list.Data.sort((a, b) => {
             return b.TopicCount - a.TopicCount;
           });
-          let Data = this.onPutCompanyName(list.Data)
-          list.Data = Data
+          let Data = this.onPutCompanyName(list.Data);
+          list.Data = Data;
           this.lineHChartData = list;
           this.loadingChart = false;
           localStorage.setItem("lineBChartData", JSON.stringify(list));
