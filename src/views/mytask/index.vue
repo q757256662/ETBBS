@@ -309,7 +309,6 @@ export default {
       if (state < 4) {
         this.ResetQueryList(state)
           .then(res => {
-            console.log(this.queryList)
             this.getList(this.queryList);
           })
           .catch(err => {
@@ -327,6 +326,9 @@ export default {
     },
     //获取列表
     getList(queryList) {
+      if(queryList==undefined){
+        queryList = this.queryList
+      }
       this.tagDisabled = true;
       this.loadingState = true;
       this.queryList.tagId = Number(Cookies.get("tagId") || -1);

@@ -9,6 +9,7 @@
         <line-marker1 :chart-data="lineHChartData"></line-marker1>
       </div>
       <div class="FCountPie">
+        <line-charts :chart-data="replyLinetData"></line-charts>
       </div>
       <div class="FCountPie">
         <line-chart :chart-data="lineChartData"></line-chart>
@@ -81,7 +82,8 @@ import {
   GetPostCount,
   GetReplyCount,
   GetAverageCount,
-  GetFinishCount
+  GetFinishCount,
+  GetreplyLine
 } from "@/api/Charts";
 import { formatTime } from "@/utils/index";
 import lineMarker from "@/components/Charts/FtopicCountPie.vue"; //发帖
@@ -89,13 +91,15 @@ import lineMarker1 from "@/components/Charts/HtopicCountPie.vue"; //回帖
 import lineMarker2 from "@/components/Charts/topicCountBar.vue"; //柱图
 import LineChart from "@/components/Charts/topicCountPie.vue"; //总贴数饼图
 import LineChart2 from "@/components/Charts/NoFtopicCountPie.vue"; //未结帖饼图
+import lineCharts from "@/components/Charts/lineTopicCount.vue";//折线图
 export default {
   components: {
     lineMarker,
     lineMarker1,
     lineMarker2,
     LineChart,
-    LineChart2
+    LineChart2,
+    lineCharts
   },
   data() {
     return {
@@ -105,7 +109,8 @@ export default {
       lineBChartData: [], //柱状图平均
       loadingChart: true,
       nofinishData: null,
-      tableData: []
+      tableData: [],
+      replyLinetData:null,//折线图
     };
   },
   created() {
@@ -114,6 +119,7 @@ export default {
     this.getHList();
     this.getAList();
     this.getNofinishData();
+    this.getLineReplyCount();
     // this.getBarList()
   },
   filters: {
@@ -222,6 +228,22 @@ export default {
         }
         return el;
       });
+    },
+    onAddArray(arr) {
+      for (let i = arr.length; i < 26; i++) {
+        arr.push(0);
+      }
+      return arr;
+    },
+    /**获取回帖发帖折线图 */
+    getLineReplyCount(){
+      GetreplyLine().then(res=>{
+        if(res.Success){
+          this.replyLinetData = {time:res.Data.time.reverse(),reValue:this.onAddArray(res.Data.reValue).reverse(),topicValue:this.onAddArray(res.Data.topicValue).reverse()}
+        }else{
+          this.$message.warning(res.tip)
+        }
+      })
     },
     //总数
     getList() {

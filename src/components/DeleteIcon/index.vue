@@ -12,13 +12,13 @@
 </template>
 <script>
 import { DeleteTopic } from "@/api/topic.js";
-import {  deleteColletion } from "@/api/mycollections.js";
+import { deleteColletion } from "@/api/mycollections.js";
 
 export default {
   name: "DeleteIcon",
   props: {
     topicId: {
-      type: [Number,String],
+      type: [Number, String],
       default: null
     },
     deleteType: {
@@ -40,7 +40,7 @@ export default {
           if (res.Success) {
             this.$message.success("移除成功");
             // this.getMyCollect();
-            this.$emit('getMyCollect')
+            this.$emit("getMyCollect");
           } else {
             this.$message.warning(res.ErrMes);
           }
@@ -49,8 +49,12 @@ export default {
         //删除帖子
         DeleteTopic({ TopicId: this.topicId }).then(res => {
           this.visible = false;
-          this.$message.success('删除成功')
-          this.$emit("onFlashPage");
+          if (res.Success) {
+            this.$message.success("删除成功");
+            this.$emit("onFlashPage");
+          }else{
+            this.$message.warning("删除失败");
+          }
         });
       }
     }

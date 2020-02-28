@@ -419,6 +419,7 @@ export default {
         this.viewStateData = {...this.viewState}
         if (res.Success) {
           this.TagList = res.Data.Rows;
+          this.selectTag = this.loadData.tagId
         }
       });
     },

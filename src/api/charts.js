@@ -42,3 +42,11 @@ export function GetFinishCount(data) {
     params:data
   })
 }
+
+//折线图统计
+export function GetreplyLine() {
+  return request({
+    url: '/Statis/replyLine', 
+    method: 'get',
+  })
+}

@@ -127,7 +127,7 @@
       @click="subTopic"
       :loading="uploadLoading"
       style="margin-top:10px;float:right;"
-    >发送</el-button>
+    >发贴</el-button>
   </div>
 </template>
 
@@ -527,7 +527,7 @@ export default {
                 customerUserpostmessage(this.SubmitForm).then(res => {
                   this.uploadLoading = false;
                   if (res.Success) {
-                    this.$message.success("发送成功");
+                    this.$message.success("发贴成功");
                     setTimeout(() => {
                       this.$router.push("/mytask/index");
                     }, 1000);
@@ -549,7 +549,7 @@ export default {
                 submitTopic(this.SubmitForm).then(res => {
                   this.uploadLoading = false;
                   if (res.Success) {
-                    this.$message.success("发送成功");
+                    this.$message.success("发贴成功");
                     setTimeout(() => {
                       this.$router.push("/mytask/index");
                     }, 1000);

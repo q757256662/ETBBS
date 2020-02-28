@@ -175,7 +175,7 @@
       :visible.sync="allCompanyDialog"
       width="30%"
       class="allCompany"
-      lock-scroll="fasle"
+      :lock-scroll="false"
     >
       <el-table :data="allCompanyName" style="width: 100%">
         <el-table-column prop="CompanyId" label="公司ID" width="120px;"></el-table-column>
@@ -590,19 +590,25 @@ export default {
     },
     /**删除以往帖子 */
     handleClickDeleteTopic() {
-      let createTime =
-        new Date(this.deleteDate[0]).toLocaleDateString().replace(/\//g, "-") +
-        " 00:00:00";
-      let eTime =
-        new Date(this.deleteDate[1]).toLocaleDateString().replace(/\//g, "-") +
-        " 23:59:59";
-      deletetimesolttopic({ createTime, eTime }).then(res => {
-        if (res.Success) {
-          this.$message.success("删除成功");
-        } else {
-          this.$message.warning(res.ErrMes);
-        }
-      });
+      if (this.deleteDate[0] !== undefined||this.deleteDate[1] !== undefined) {
+        let createTime =
+          new Date(this.deleteDate[0])
+            .toLocaleDateString()
+            .replace(/\//g, "-") + " 00:00:00";
+        let eTime =
+          new Date(this.deleteDate[1])
+            .toLocaleDateString()
+            .replace(/\//g, "-") + " 23:59:59";
+        deletetimesolttopic({ createTime, eTime }).then(res => {
+          if (res.Success) {
+            this.$message.success("删除成功");
+          } else {
+            this.$message.warning(res.ErrMes);
+          }
+        });
+      }else{
+        this.$message.warning('请选择删除日期')
+      }
     },
     /**添加关键词 */
     handleIncreaseKeyWord() {

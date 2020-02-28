@@ -134,7 +134,7 @@
       @click="subTopic"
       :laoding="uploadLoading"
       style="margin-top:10px;float:right;"
-    >发送</el-button>
+    >发帖</el-button>
   </div>
 </template>
 
@@ -692,7 +692,7 @@ export default {
                 .then(res => {
                   this.uploadLoading = false;
                   if (res.Success) {
-                    this.$message.success("发送成功");
+                    this.$message.success("发贴成功");
                     setTimeout(() => {
                       this.$router.push("/mytask/index");
                     }, 1000);
