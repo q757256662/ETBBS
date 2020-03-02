@@ -36,8 +36,16 @@
       >让他从我眼前消失吧</el-button>
       <el-button type="info" @click="handleInvite" v-show="quote==null" v-if="!CustomerUser">邀请回答</el-button>
       <span>
-        <el-button @click="handleJoin" v-if="viewStateData.topicType!=3&&viewStateData.createUser!=createUser&&!viewStateData.IsJoin&&quote==null" key="join">我要加入</el-button>
-        <el-button @click="handleExitView" v-if="viewStateData.topicType!=3&&viewStateData.IsJoin&&quote==null" key="exit">退出关注</el-button>
+        <el-button
+          @click="handleJoin"
+          v-if="viewStateData.topicType!=3&&viewStateData.createUser!=createUser&&!viewStateData.IsJoin&&quote==null"
+          key="join"
+        >我要加入</el-button>
+        <el-button
+          @click="handleExitView"
+          v-if="viewStateData.topicType!=3&&viewStateData.IsJoin&&quote==null"
+          key="exit"
+        >退出关注</el-button>
       </span>
       <el-button
         type="primary"
@@ -101,8 +109,8 @@ export default {
     topicType: {
       type: Number
     },
-    viewState:{
-      type:Object
+    viewState: {
+      type: Object
     }
   },
   data() {
@@ -126,7 +134,7 @@ export default {
       uploadLoading: false, //上传加载状态
       TagList: [], //标签列表
       selectTag: "", //选择的标签
-      viewStateData:{}
+      viewStateData: {}
     };
   },
   computed: {
@@ -135,8 +143,8 @@ export default {
     },
     ...mapState({
       CustomerUser: state => state.user.userinfo.isCustomerUser,
-      createUser:state=>state.user.userinfo.id
-    }),
+      createUser: state => state.user.userinfo.id
+    })
   },
   watch: {
     quote(value) {
@@ -174,25 +182,24 @@ export default {
     /**加入讨论 */
     handleJoin() {
       join({ topicId: this.currentTopic }).then(res => {
-        if(res.Success){
-          this.$message.success("加入成功")
-          this.viewStateData.IsJoin = !this.viewStateData.IsJoin
-
-        }else{
-          this.$message.warning(res.ErrMes)
+        if (res.Success) {
+          this.$message.success("加入成功");
+          this.viewStateData.IsJoin = !this.viewStateData.IsJoin;
+        } else {
+          this.$message.warning(res.ErrMes);
         }
       });
     },
     /**退出关注 */
     handleExitView() {
       cancleAttention({ topicId: this.currentTopic }).then(res => {
-        if(res.Success){
-          this.$message.success("退出成功")
-          setTimeout(()=>{
-            history.back(-1)
-          },1000)
-        }else{
-          this.$message.warning(res.ErrMes)
+        if (res.Success) {
+          this.$message.success("退出成功");
+          setTimeout(() => {
+            history.back(-1);
+          }, 1000);
+        } else {
+          this.$message.warning(res.ErrMes);
         }
       });
     },
@@ -350,7 +357,7 @@ export default {
               this.uploadLoading = false;
               this.$message.warning(res.ErrMes);
             }
-          })
+          });
         }
       });
     },
@@ -363,7 +370,7 @@ export default {
           this.$message.success("成功");
           setTimeout(() => {
             // window.close();
-            history.back(-1)
+            history.back(-1);
           }, 1000);
         } else {
           this.$message.warning(res.ErrMes);
@@ -416,10 +423,10 @@ export default {
     //获取tag列表
     getTagList() {
       getTag().then(res => {
-        this.viewStateData = {...this.viewState}
+        this.viewStateData = { ...this.viewState };
         if (res.Success) {
           this.TagList = res.Data.Rows;
-          this.selectTag = this.loadData.tagId
+          this.selectTag = this.loadData.tagId;
         }
       });
     },
@@ -439,6 +446,26 @@ export default {
   mounted() {
     this.editor = new E(this.$refs.editor);
     this.editor.customConfig.onchange = html => {
+      // text = html
+      // console.log(html);
+      // console.log(html)
+      if (
+        html.slice(0, 10) == "<blockquot" &&
+        html.slice(length - 11) == "blockquote>"
+      ) {
+        this.editor.txt.append("<br>");
+      }
+      document.getElementsByClassName("w-e-text")[1].onkeydown = function(e) {
+        if (window.event)
+          //如果window.event对象存在，就以此事件对象为准
+          e = window.event;
+        var code = e.charCode || e.keyCode;
+        if (code == 8 && html.slice(length - 14) == "lockquote><br>") {
+          // e.preventDefault()
+          e.stopPropagation();
+          return false;
+        }
+      };
       this.editorContent = html;
     };
     this.editor.customConfig.uploadImgShowBase64 = true;
@@ -448,7 +475,7 @@ export default {
       this.editor.txt.clear();
       if (this.quote.IsEdite == 0) {
         this.editor.txt.html(
-          "<blockquote style='display: block;border-left: 8px solid #d0e5f2;padding: 5px 10px;margin: 10px 0;line-height: 1.4;font-size: 100%;background-color: #ccc;::after:content:123123'>" +
+          "<blockquote  style='display: block;border-left: 8px solid #d0e5f2;padding: 5px 10px;margin: 10px 0;line-height: 1.4;font-size: 100%;background-color: #ccc;::after:content:123123'>" +
             "@" +
             this.quote.Name +
             "：" +
@@ -464,6 +491,8 @@ export default {
           "：" +
           this.quote.Contents +
           "</blockquote>";
+        // document.getElementsByTagName('blockquote').
+        // let text = this.editorContent
       } else {
         this.editor.txt.html(this.quote.Contents);
         this.editorContent = this.quote.Contents;
