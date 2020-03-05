@@ -45,7 +45,14 @@
               title="查看所有回复"
               class="el-icon-caret-bottom"
             ></i>
+            <el-button
+                @click="handleResultTopic(titleDetails)"
+                v-if="isCanEndTopic"
+                type="primary"
+                plain
+              >结贴</el-button>
           </h2>
+          
           <!-- <span>{{titleDetails.Name}}:</span> -->
           <p
             v-html="titleDetails.Contents"
@@ -81,12 +88,7 @@
               </span>
             </div>
             <div class="result-topic" v-if="loadData.State!=2">
-              <el-button
-                @click="handleResultTopic(titleDetails)"
-                v-if="isCanEndTopic"
-                type="primary"
-                plain
-              >结贴</el-button>
+              
               <el-button
                 @click="handleResultTopicToNotice(titleDetails)"
                 v-if="userInfo.id==titleDetails.User_Id&&userInfo.Role=='管理员'&&userInfo.company_Id==1"
@@ -530,6 +532,8 @@ export default {
   updated() {
     this.$nextTick(() => {
       this.viewerId && this.viewerId.destroy();
+      // currentSrc: http://bbs.etsystem.cn/attached/file/2016/%E5%88%98%E4%B8%96%E6%B1%B6/11.png
+      // currentSrc: http://bbs.etsystem.cn/attached/file/2018/%E5%B0%8F%E9%82%B1/1204/1330/158.png
       this.viewerId = new Viewer(this.$refs.QuestionPage, {
         title: false,
         toolbar: false,
