@@ -292,7 +292,7 @@
         </div>
       </div>
     </el-dialog>
-    <el-dialog key="引用回复" append-to-body :visible.sync="quoteDialog" width="60%" title="引用回复">
+    <el-dialog key="引用回复" append-to-body :visible.sync="quoteDialog" width="60%" title="引用回复" v-dialogDrag>
       <Editor
         :currentTopic="topicId"
         :quoteId="quoteId"
