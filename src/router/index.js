@@ -222,7 +222,7 @@ export const constantRouterMap = [
       {
         path: '/',
         name: 'TopicSingle',
-        component: () => import('@/views/TopicSingle/index'),
+        component: () => import('@/views/TopicSingle'),
         meta: { title: '帖子', icon: 'form' }
       }
     ],

@@ -520,7 +520,7 @@ export default {
       // console.log('点击了');
       // console.log(obj);
       var routeData = this.$router.push({
-        name: "TopicSingle",
+        path: "/TopicSingle",
         query: {
           topicId: obj.id
         }
