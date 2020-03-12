@@ -8,6 +8,7 @@ const getters = {
   userinfo:state => state.user.userinfo,
   currentState:state =>state.user.currentState,
   menu:state=>state.permission.routes,
-  background:state =>state.app.background
+  background:state =>state.app.background,
+  tagArr:state =>state.user.tagArr
 }
 export default getters

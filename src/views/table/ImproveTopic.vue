@@ -135,11 +135,14 @@
       :laoding="uploadLoading"
       style="margin-top:10px;float:right;"
     >发帖</el-button>
-  </div>
+  </div>  
 </template>
 
 <script>
 import { getAboutMessage, checkTel, submitTopic, getOssMes } from "@/api/table";
+import {
+  uploadimg
+} from "@/api/topic";
 import { getToken, setToken, removeToken } from "@/utils/auth";
 import { isvalidPhone } from "@/utils/validate";
 import axios from "axios";
@@ -648,13 +651,43 @@ export default {
         }
       });
     },
+    /**替换文本 */
+    handleReplyImg(html) {
+      return new Promise((resolve, reject) => {
+        if (html.indexOf('<img src="data:image') == -1) {
+          resolve(html);
+        }
+        let imgArr = [];
+        let str = html;
+        var substr = str.match(/<img src=\"data:image(\S*)"/g);
+        substr.map(el => {
+          let str1 = el.slice(el.indexOf('"') + 1, el.length - 1);
+          imgArr.push({
+            FileName: "." + str1.slice(str1.indexOf("/") + 1, str1.indexOf(";")),
+            BaseStr: str1
+          });
+        });
+        uploadimg(imgArr).then(res => {
+          if (res.Success) {
+            let newStr = str;
+            imgArr.map((el, index) => {
+              newStr = newStr.replace(imgArr[index].BaseStr, res.Data[index]);
+            });
+            resolve(newStr);
+          } else {
+            reject(res.ErrMes);
+          }
+        });
+      });
+    },
     //发帖
     async subTopic() {
       try {
         let result = await this.onSumbitQuestion();
-        this.SubmitForm.TopicContent = result;
+        this.SubmitForm.TopicContent = await this.handleReplyImg(result)
       } catch (error) {
         // console.log(error);
+        this.$message.warning(error)
       }
       this.onSubmitAtt()
         .then(res => {

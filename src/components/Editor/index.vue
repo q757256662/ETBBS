@@ -54,7 +54,7 @@
         :loading="uploadLoading"
       >回帖</el-button>
     </div>
-    <el-dialog title="查看链接" :visible.sync="linkDialog" width="30%" append-to-body>
+    <el-dialog title="查看链接" :visible.sync="linkDialog" width="450px" append-to-body >
       <inviteList :inviteList="linkList" type="link" @onInvite="handleInviteReply"></inviteList>
       <span slot="footer" class="dialog-footer">
         <el-button @click="linkDialog = false">取 消</el-button>
@@ -75,7 +75,8 @@ import {
   Solveday,
   ReplyMessage,
   join,
-  cancleAttention
+  cancleAttention,
+  uploadimg
 } from "@/api/topic";
 import { getAboutMessage } from "@/api/table";
 import { getToken } from "@/utils/auth";
@@ -130,7 +131,7 @@ export default {
         { value: "-1|很久以后", label: "很久以后" }
       ], //解决时间选项
       selectSolve: "", //当前选中的时间
-      linkList: [], //链接列表
+      // linkList: [], //链接列表
       uploadLoading: false, //上传加载状态
       TagList: [], //标签列表
       selectTag: "", //选择的标签
@@ -138,12 +139,16 @@ export default {
     };
   },
   computed: {
+    linkList(){
+      return this.loadData.LinkTopic
+    },
     isHidden() {
       return this.topicType == 3 || this.topicType == 4;
     },
     ...mapState({
       CustomerUser: state => state.user.userinfo.isCustomerUser,
-      createUser: state => state.user.userinfo.id
+      createUser: state => state.user.userinfo.id,
+      tagArr:state =>state.user.tagArr
     })
   },
   watch: {
@@ -205,7 +210,7 @@ export default {
     },
     /**邀请人员 */
     handleInvite() {
-      this.$emit("onInviteReply");
+      this.$emit("onInviteReply",true);
     },
     /** 获取文件后缀名*/
     _splitExtension(name) {
@@ -223,9 +228,10 @@ export default {
     },
     /**查看链接 */
     handleClickLink() {
+      this.$emit("onInviteReply",false);
       this.linkDialog = true;
       // this.initData()
-      this.linkList = this.loadData.LinkTopic;
+      // this.linkList = this.loadData.LinkTopic;
     },
     /**初始化链接列表 */
     // initData(){
@@ -310,19 +316,48 @@ export default {
         }
       });
     },
+    /**替换文本 */
+    handleReplyImg(html) {
+      return new Promise((resolve, reject) => {
+        if (html.indexOf('<img src="data:image') == -1) {
+          resolve(html);
+        }
+        let imgArr = [];
+        let str = html;
+        var substr = str.match(/<img src=\"data:image(\S*)"/g);
+        substr.map(el => {
+          let str1 = el.slice(el.indexOf('"') + 1, el.length - 1);
+          imgArr.push({
+            FileName: "." + str1.slice(str1.indexOf("/") + 1, str1.indexOf(";")),
+            BaseStr: str1
+          });
+        });
+        uploadimg(imgArr).then(res => {
+          if (res.Success) {
+            let newStr = str;
+            imgArr.map((el, index) => {
+              newStr = newStr.replace(imgArr[index].BaseStr, res.Data[index]);
+            });
+            resolve(newStr);
+          } else {
+            reject(res.ErrMes);
+          }
+        });
+      });
+    },
     /**回帖 */
-    handleReplyTopic() {
-      this.onSubmitAtt().then(res => {
+      handleReplyTopic() {
+      this.onSubmitAtt().then(async res => {
         let obj = {};
         /**是否有附件 */
         if (this.quote != null) {
-          // this.editor.txt.append("<blockquote>" + this.quote.Contents + "</blockquote>")
-          // this.editorContent += "<blockquote>" + this.quote.Contents + "</blockquote>"
-          // this.editor.txt =
-          //   "<blockquote>" + this.quote.Contents + "</blockquote>";
           obj.ReplyType = 2; //回复类型  0 直接回复  2指定回复(修改)
           obj.TopicId = this.$props.currentTopic;
-          obj.Content = this.editor.txt.html();
+          try {
+            obj.Content = await this.handleReplyImg(this.editor.txt.html())
+          } catch (error) {
+            this.$message.warning(error)
+          }
           obj.FileName = res;
           obj.ReplyId = this.quoteId;
           if (!!this.quoteId && this.quote.IsEdite == 0) {
@@ -333,7 +368,11 @@ export default {
             obj.Location = "EditLastReply";
           }
         } else {
-          obj.Content = this.editor.txt.html();
+          try {
+            obj.Content = await this.handleReplyImg(this.editor.txt.html())
+          } catch (error) {
+            this.$message.warning(error)
+          }
           obj.TopicId = this.$props.currentTopic;
           obj.FileName = res;
         }
@@ -422,13 +461,13 @@ export default {
     },
     //获取tag列表
     getTagList() {
-      getTag().then(res => {
+      // getTag().then(res => {
         this.viewStateData = { ...this.viewState };
-        if (res.Success) {
-          this.TagList = res.Data.Rows;
-          this.selectTag = this.loadData.tagId||"";
-        }
-      });
+        // if (res.Success) {
+          this.TagList = this.tagArr;
+          this.selectTag = this.loadData.tagId || "";
+        // }
+      // });
     },
     handleSelectTag(val) {
       let form = {};

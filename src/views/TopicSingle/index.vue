@@ -4,16 +4,13 @@
     <div class="Topic_container">
       <div class="QuestionHeader">
         <div class="list_header">
-          <div  v-if="titleDetails.UserState==0">
-            <p
-              class="avator-color"
-              :style="{background:onSelectColor(titleDetails.Name)}"
-            > </p>
+          <div v-if="titleDetails.UserState==0">
+            <p class="avator-color" :style="{background:onSelectColor(titleDetails.Name)}"></p>
             <div class="user_detail">
               <div></div>
             </div>
           </div>
-          <div v-else> 
+          <div v-else>
             <p
               class="avator-color"
               :style="{background:onSelectColor(titleDetails.Name)}"
@@ -46,13 +43,13 @@
               class="el-icon-caret-bottom"
             ></i>
             <el-button
-                @click="handleResultTopic(titleDetails)"
-                v-if="isCanEndTopic"
-                type="primary"
-                plain
-              >结贴</el-button>
+              @click="handleResultTopic(titleDetails)"
+              v-if="isCanEndTopic"
+              type="primary"
+              plain
+            >结贴</el-button>
           </h2>
-          
+
           <!-- <span>{{titleDetails.Name}}:</span> -->
           <p
             v-html="titleDetails.Contents"
@@ -88,7 +85,6 @@
               </span>
             </div>
             <div class="result-topic" v-if="loadData.State!=2">
-              
               <el-button
                 @click="handleResultTopicToNotice(titleDetails)"
                 v-if="userInfo.id==titleDetails.User_Id&&userInfo.Role=='管理员'&&userInfo.company_Id==1"
@@ -113,10 +109,7 @@
               </div>
             </div>
             <div v-else>
-              <p
-                class="avator-color"
-                :style="{background:onSelectColor(item.Name)}"
-              ></p>
+              <p class="avator-color" :style="{background:onSelectColor(item.Name)}"></p>
               <div class="user_detail">
                 <div></div>
               </div>
@@ -147,7 +140,12 @@
               <svg-icon icon-class="arrowdownload"></svg-icon>
               <svg-icon icon-class="bandownload"></svg-icon>
                 </el-button>-->
-                <span size="mini" @click="handleReply(item)" class="withicon-button" v-if="loadData.State!=2||userInfo.company_Id == 1">
+                <span
+                  size="mini"
+                  @click="handleReply(item)"
+                  class="withicon-button"
+                  v-if="loadData.State!=2||userInfo.company_Id == 1"
+                >
                   <span v-if="item.IsEdite==0">
                     <svg-icon icon-class="reply"></svg-icon>回复
                   </span>
@@ -186,7 +184,7 @@
             :currentTopic="topicId"
             @onGetList="getList"
             :loadData="loadData"
-            @onInviteReply="inviteDialog = true"
+            @onInviteReply="showInvited"
             :key="loadData.topicType"
             :topicType="loadData.topicType"
             :viewState="viewState"
@@ -294,7 +292,14 @@
         </div>
       </div>
     </el-dialog>
-    <el-dialog key="引用回复" append-to-body :visible.sync="quoteDialog" width="60%" title="引用回复" v-dialogDrag>
+    <el-dialog
+      key="引用回复"
+      append-to-body
+      :visible.sync="quoteDialog"
+      width="60%"
+      title="引用回复"
+      v-dialogDrag
+    >
       <Editor
         :currentTopic="topicId"
         :quoteId="quoteId"
@@ -468,8 +473,8 @@ export default {
       titleDetails: {}, //帖子详情
       isCanEndTopic: false, //是否可以结贴
       isCanEndState: false,
-      viewState:{},//关注状态
-
+      viewState: {}, //关注状态
+      firstLoad:true
     };
   },
   computed: {
@@ -586,10 +591,11 @@ export default {
       this.textNewTitle = this.topicTitle;
     },
     CloseInvite() {},
-    showInvited() {
-      // this.onReplyLoadData();
-
-      this.inviteDialog = true;
+    showInvited(result) {
+      this.onReplyLoadData();
+      if(result){
+        this.inviteDialog = true;
+      }
     },
     //Topic/updatetitle 修改标题  TopicId帖子ID   Content新标题  httput
     editTopicTitle() {
@@ -622,7 +628,7 @@ export default {
               setTimeout(() => {
                 // window.colse()
                 // window.close();
-                history.back(-1)
+                history.back(-1);
               }, 1000);
             } else {
               this.$message.warning(res.ErrMes);
@@ -683,7 +689,7 @@ export default {
     onInitData(topicId) {
       this.topicId = topicId;
       this.getList();
-      this.onReplyLoadData();
+      // this.onReplyLoadData();
     },
     /**点击内容 */
     handleClickContent(topic, row) {
@@ -785,30 +791,19 @@ export default {
 
     /**初始化列表 */
     onReplyLoadData() {
-      //  this.loadData = {};
+      if(!this.firstLoad){
+        return true
+      }
       replyLoadData({ topicId: this.$route.query.topicId })
         .then(res => {
           if (res.Success) {
-            this.loadData = res.Data;
-            this.topicType = res.Data.topicType;
-            if (res.Data.State == 2) {
-              this.isCanEndState = true;
-            } else {
-              this.isCanEndState = false;
-            }
-            this.viewState.topicType = res.Data.topicType
-            this.viewState.IsJoin = res.Data.IsJoin
-            this.viewState.createUser = res.Data.createUser
-
-
-            // console.log(this.isCanEndState);
-            //  this.loadData = JSON.parse(JSON.stringify(this.loadData))
+            this.firstLoad = false
+            this.loadData = {...this.loadData,...res.Data};
             if (this.userInfo.company_Id == 1) {
               for (var i = 3; 0 <= i && i < 4; i--) {
                 this.loadData.NotNoticeUser.unshift(this.arrAll[i]);
               }
             }
-
             this.inviteListReplace = this.onFilterConcern(
               this.loadData.NotNoticeUser
             );
@@ -892,12 +887,19 @@ export default {
               this.list = this.list.splice(1, this.list.length);
               this.isCanEndTopic = res.Data.IsCanEndTopic;
             }
-            //  console.log(this.topicTitle);
             this.total = res.Data.Total;
-            if (this.$route.query.topicState == 1) {
-              // this.editTopic();
-              console.log(1111);
+            // if (this.$route.query.topicState == 1) {
+            // }
+            this.topicType = res.Data.topicType;
+            if (res.Data.State == 2) {
+              this.isCanEndState = true;
+            } else {
+              this.isCanEndState = false;
             }
+            this.viewState.topicType = res.Data.topicType;
+            this.viewState.IsJoin = res.Data.IsJoin;
+            this.viewState.createUser = res.Data.createUser;
+            this.loadData = {...this.loadData,...{tagId:res.Data.tagId,State:res.Data.State,IsCanEndTopic:res.Data.IsCanEndTopic,topicType:res.Data.topicType,IsJoin:res.Data.IsJoin,createUser:res.Data.createUser}}
           }
         })
         .catch(err => {

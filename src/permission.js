@@ -16,13 +16,15 @@ router.beforeEach( (to, from, next) => {
       NProgress.done() // if current page is dashboard will not trigger	afterEach hook, so manually handle it
     } else {
       if (JSON.stringify(store.getters.userinfo) == "{}") {
-        store.dispatch('GetInfo').then(res => { // 拉取用户信息
+        store.dispatch('GetInfo').then(async res => { // 拉取用户信息
           let background = Cookies.get('background')
           if(background==undefined){
             store.dispatch('SetBackground','#EDEDED')
           }else{
             store.dispatch('SetBackground',background)
           }
+          let result = await store.dispatch('get_tagArr')
+          console.log(result)
           let role
           if(!res.isCustomerUser){
             if(res.info.company_Id==1){

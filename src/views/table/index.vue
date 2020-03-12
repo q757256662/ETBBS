@@ -18,7 +18,11 @@
       <el-form-item prop="TopicTitle" maxlength="11" label="帖子主题">
         <el-input class="topic_head" v-model="SubmitForm.TopicTitle" placeholder="主题"></el-input>
       </el-form-item>
-      <el-form-item label="指明关注人" prop="FocusUserId" v-if="!(SubmitForm.TopicTypeId=='3'||SubmitForm.TopicTypeId=='4')">
+      <el-form-item
+        label="指明关注人"
+        prop="FocusUserId"
+        v-if="!(SubmitForm.TopicTypeId=='3'||SubmitForm.TopicTypeId=='4')"
+      >
         <el-select
           @change="changeFocus($event)"
           v-model="SubmitForm.FocusUserId"
@@ -50,7 +54,7 @@
       <el-form-item label="限制分">
         <el-input v-model="SubmitForm.Score" type="number"></el-input>
       </el-form-item>
-      
+
       <el-form-item prop="Phone" maxlength="11" label="师傅手机号">
         <el-input v-model="SubmitForm.Phone"></el-input>
         <el-button type="primary" @click="checkPhone">检查手机号</el-button>
@@ -137,8 +141,11 @@ import {
   checkTel,
   submitTopic,
   getOssMes,
-  customerUserpostmessage
+  customerUserpostmessage,
 } from "@/api/table";
+import {
+  uploadimg
+} from "@/api/topic";
 import { getToken, setToken, removeToken } from "@/utils/auth";
 import { isvalidPhone } from "@/utils/validate";
 import axios from "axios";
@@ -177,7 +184,7 @@ export default {
         IsHot: 0, //是否加急
         Score: 0, //分
         Phone: "", //手机
-        TopicTypeId: "1",//发帖类型
+        TopicTypeId: "1", //发帖类型
         TopicContent: "", //内容
         LinkTopicIds: []
       },
@@ -194,38 +201,37 @@ export default {
         {
           value: "1",
           label: "普通贴",
-          role:[1,0]
+          role: [1, 0]
         },
         {
           value: "2",
           label: "私人贴",
-          role:[1,0]
-
+          role: [1, 0]
         },
         {
           value: "3",
           label: "本公司公告贴",
-          role:[1,0]
+          role: [1, 0]
         },
         {
           value: "4",
           label: "功能贴",
-          role:[1]
+          role: [1]
         },
         {
           value: "5",
           label: "程序更新",
-          role:[1]
+          role: [1]
         },
         {
           value: "6",
           label: "疑难解答",
-          role:[1]
+          role: [1]
         },
         {
           value: "7",
           label: "其他开发部公告贴",
-          role:[1]
+          role: [1]
         }
       ], //类型
       keyWords: [], //关键字
@@ -278,13 +284,13 @@ export default {
   computed: {
     ...mapState({
       CustomerUser: state => state.user.userinfo.isCustomerUser,
-      userinfo:state=>state.user.userinfo
+      userinfo: state => state.user.userinfo
     }),
-    isBY(){
-      if(this.userinfo.company_Id==1){
-        return 1
-      }else{
-        return 0
+    isBY() {
+      if (this.userinfo.company_Id == 1) {
+        return 1;
+      } else {
+        return 0;
       }
     }
   },
@@ -486,12 +492,46 @@ export default {
         }
       });
     },
+    /**替换文本 */
+    handleReplyImg(html) {
+      return new Promise((resolve, reject) => {
+        if (html.indexOf('<img src="data:image') == -1) {
+          resolve(html);
+        }
+        let imgArr = [];
+        let str = html;
+        var substr = str.match(/<img src=\"data:image(\S*)"/g);
+        substr.map(el => {
+          let str1 = el.slice(el.indexOf('"') + 1, el.length - 1);
+          imgArr.push({
+            FileName: "." + str1.slice(str1.indexOf("/") + 1, str1.indexOf(";")),
+            BaseStr: str1
+          });
+        });
+        uploadimg(imgArr).then(res => {
+          if (res.Success) {
+            let newStr = str;
+            imgArr.map((el, index) => {
+              newStr = newStr.replace(imgArr[index].BaseStr, res.Data[index]);
+            });
+            resolve(newStr);
+          } else {
+            reject(res.ErrMes);
+          }
+        });
+      });
+    },
     //发帖
     subTopic() {
       this.onSubmitAtt()
-        .then(res => {
+        .then(async res => {
           this.SubmitForm.FileName = res;
-          this.SubmitForm.TopicContent = this.editorContent;
+          try {
+            // console.log()
+            this.SubmitForm.TopicContent = await this.handleReplyImg(this.editorContent);
+          } catch (error) {
+            this.$message.warning(error);
+          }
           // this.SubmitForm.KeyName = this.KeyName || this.checkedKeyword;
           // console.log(this.SubmitForm.KeyName)
           this.$refs["SubmitTopicForm"].validate(valid => {
@@ -521,6 +561,7 @@ export default {
               //   let str = this.checkedKeyword.join(",");
               //   this.SubmitForm.KeyName = str;
               // }
+              console.log(this.SubmitForm)
               if (this.CustomerUser) {
                 this.SubmitForm.TopicTypeId = 1;
                 this.SubmitForm.KeyName = "";
@@ -542,9 +583,12 @@ export default {
                 } else {
                   this.SubmitForm.KeyName = this.checkedKeyword.join(",");
                 }
-                if(this.SubmitForm.TopicTypeId==3||this.SubmitForm.TopicTypeId==4){
-                  this.SubmitForm.FocusUser = ""
-                  this.SubmitForm.FocusUserId = 0
+                if (
+                  this.SubmitForm.TopicTypeId == 3 ||
+                  this.SubmitForm.TopicTypeId == 4
+                ) {
+                  this.SubmitForm.FocusUser = "";
+                  this.SubmitForm.FocusUserId = 0;
                 }
                 submitTopic(this.SubmitForm).then(res => {
                   this.uploadLoading = false;

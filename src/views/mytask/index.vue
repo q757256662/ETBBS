@@ -150,6 +150,8 @@ import noItem from "@/components/NoItem";
 import Cookies from "js-cookie"; //获取当前帖子停留状态
 import Pagination from "@/components/Pagination";
 import { getTag } from "@/api/addtag.js";
+import { mapState } from "vuex";
+
 export default {
   components: {
     complexItem: complexItem,
@@ -173,10 +175,7 @@ export default {
       newTopicList: [], //新话题的列表
       total: 100, //总条数
       loadingState: false,
-      dynamicTags: [
-        { Id: -1, name: "全部" },
-        { Id: 0, name: "无标签" }
-      ], //所有标签
+      // dynamicTags: [], //所有标签
       tagDisabled: false,
       sortCondition: [
         //排序条件
@@ -194,7 +193,6 @@ export default {
         { sortWhere: "topic", isDesc: false },
         { sortWhere: "reply", isDesc: true },
         { sortWhere: "reply", isDesc: false }
-        
       ],
       CurrentSortCondition: 0 //当前选中的条件
     };
@@ -205,7 +203,7 @@ export default {
       // console.log(localStorage.getItem("totalPage")||50)
       if (Cookies.get("currentState") == undefined) {
         this.CurrentTab = "NewTopic";
-        Cookies.set('currentState','NewTopic')
+        Cookies.set("currentState", "NewTopic");
       } else {
         this.CurrentTab = Cookies.get("currentState");
       }
@@ -239,17 +237,17 @@ export default {
         ...this.queryList,
         ...{
           pageIndex: Number(this.$route.query.pageIndex) || 1,
-          pageSize: Number(localStorage.getItem("totalPage")||50),
+          pageSize: Number(localStorage.getItem("totalPage") || 50),
           ...this.sortConditions[this.CurrentSortCondition]
         }
       };
-      this.queryList = {...newList}
-      this.queryList.pageSize = Number(localStorage.getItem("totalPage"))||50;
+      this.queryList = { ...newList };
+      this.queryList.pageSize = Number(localStorage.getItem("totalPage")) || 50;
       if (this.CurrentTab == "draft") {
         this.getDraftTopic();
       } else {
         this.getList(newList);
-        this.onGetTag();
+        // this.onGetTag();
       }
       // console.log(newList)
     },
@@ -273,15 +271,15 @@ export default {
       this.newTopicList.splice(index, 1);
     },
     /**获取便签 */
-    onGetTag() {
-      getTag().then(res => {
-        if (res.Success) {
-          this.dynamicTags = this.dynamicTags.concat(res.Data.Rows);
-        } else {
-          this.$message.warning(res.ErrMes);
-        }
-      });
-    },
+    // onGetTag() {
+    //   getTag().then(res => {
+    //     if (res.Success) {
+    //       this.dynamicTags = this.dynamicTags.concat(res.Data.Rows);
+    //     } else {
+    //       this.$message.warning(res.ErrMes);
+    //     }
+    //   });
+    // },
     /**点击tab */
     resettagId(newValue) {
       let state = null;
@@ -326,8 +324,8 @@ export default {
     },
     //获取列表
     getList(queryList) {
-      if(queryList==undefined){
-        queryList = this.queryList
+      if (queryList == undefined) {
+        queryList = this.queryList;
       }
       this.tagDisabled = true;
       this.loadingState = true;
@@ -378,6 +376,17 @@ export default {
     // console.log(this.queryList);
     // this.getList();
     this.initData();
+  },
+  computed: {
+    ...mapState({
+      oldDynamicTags: state => state.user.tagArr,
+    }),
+    dynamicTags(){
+      return [
+        { Id: -1, name: "全部" },
+        { Id: 0, name: "无标签" }
+      ].concat(this.oldDynamicTags)
+    }
   },
   watch: {
     // CurrentTab(newValue, oldValue) {

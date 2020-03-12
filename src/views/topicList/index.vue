@@ -281,14 +281,13 @@ export default {
   },
   watch: {},
   async created() {
-    console.log(this.$route.query)
     this.SubmitQuery.topicDetail = this.$route.params.topicDetail || "";
     this.showNoBtn =
       this.$store.state.user.userinfo.CompanyName ==
       "（开发）深圳市布易科技有限公司";
     // console.log(this.showNoBtn);
     await this.LoadCondition()
-    this.getTagList();
+    // this.getTagList();
     // console.log(this.$store.state.user);
     this.roleState = this.$store.state.user.userinfo.Role;
     this.createUId = this.$store.state.user.userinfo.id;
@@ -398,16 +397,6 @@ export default {
     chageCompany(e) {
       this.queryList.pageIndex = 1;
       this.handleClickSearch();
-    },
-
-    //tga标签列表
-    getTagList() {
-      getTag().then(res => {
-        //    console.log(res);
-        if (res.Success) {
-          this.tagList = res.Data.Rows;
-        }
-      });
     },
     //加载搜索条件
     LoadCondition() {

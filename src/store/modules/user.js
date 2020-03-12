@@ -1,5 +1,7 @@
 import { login, logout, getInfo } from '@/api/login'
 import { getToken, setToken, removeToken } from '@/utils/auth'
+import { getTag } from "@/api/addtag.js";
+
 
 const user = {
   state: {
@@ -11,7 +13,8 @@ const user = {
     topicTitle:'',
     currentState:'NewTopic',
     systemManagerAuth:false,
-    dot:0
+    dot:0,
+    tagArr:[]
   },
 
   mutations: {
@@ -41,10 +44,29 @@ const user = {
     },
     SET_DOT:(state,dot)=>{
       state.dot = dot
+    },
+    SET_TAGARR:(state,tagArr)=>{
+      state.tagArr = tagArr
     }
   },
 
   actions: {
+    //获取TagArr信息
+    get_tagArr({ commit },tagArr){
+      return new Promise((resolve, reject)=>{
+        getTag().then(res => {
+          if (res.Success) {
+            let dynamicTags = res.Data.Rows;
+            commit('SET_TAGARR',dynamicTags)
+            resolve(res.Success)
+          } else {
+            this.$message.warning(res.ErrMes);
+            reject(res.ErrMes)
+          }
+        })
+      })
+      
+    },
     // 登录
     Login({ commit }, userInfo) {
       const username = userInfo.username.trim()
