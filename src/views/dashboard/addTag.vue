@@ -107,8 +107,10 @@ export default {
       this.loading = true
       getTag().then(res => {
         //    console.log(res);
-      this.loading = false
+        this.loading = false
         if (res.Success) {
+          this.$store.commit('SET_TAGARR',res.Data.Rows)
+          console.log(this.$store.state)
           this.dynamicTags = res.Data.Rows;
         }
       });

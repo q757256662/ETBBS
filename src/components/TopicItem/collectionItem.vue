@@ -1,6 +1,6 @@
 <template>
-  <router-link :to="'/TopicSingle?topicId='+topicItem.TopicId" >
-    <div class="board-item" @click="handleRoute">
+  <div>
+    <div class="board-item">
     <div class="title-recent">
       <div class="avatar" :style="{background:topicItem.Color}" @click.stop.prevent="handleCheck">
         <!-- {{topicItem.KeyFileIds.substring(0,1) }} -->
@@ -27,12 +27,6 @@
       </div>
     </div>
     <div class="detail">
-      <div class="count-block">
-        <div class="count">
-          <!-- <p class="num">{{topicItem.ReplyCount}}</p> -->
-          <!-- <p class="txt">回复</p> -->
-        </div>
-      </div>
       <div class="recent">
         <span class="line" :style="{borderLeft: `4px solid ${topicItem.Color}`}"></span>
         <div class="post">
@@ -52,7 +46,7 @@
     </div>
       <DeleteIcon :topicId="topicItem.ReplyId" @getMyCollect="onMyCollect" class="delete-class" deleteType="collection"></DeleteIcon>
   </div>
-  </router-link>
+  </div>
   
 </template>
 <script>
@@ -244,7 +238,7 @@ export default {
   align-items: center;
   height: 100%;
   justify-content: space-between;
-  width: 27%;
+  width: 200px;
 }
 .detail .count-block {
   width: 100px;

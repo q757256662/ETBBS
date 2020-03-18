@@ -80,6 +80,11 @@
           @keyup.enter.native="handleClickSearch"
         ></el-input>
       </el-form-item>
+      <el-form-item>
+        <el-tooltip class="item" effect="light" content="全文搜索" placement="top">
+          <el-checkbox v-model="SubmitQuery.isAllContent"></el-checkbox>
+        </el-tooltip>
+      </el-form-item>
       <div class="from-btn">
         <el-button size="mini" type="primary" @click="handleClickSearch">搜索</el-button>
         <el-button
@@ -260,7 +265,8 @@ export default {
         companyId: 0, //查询公司ID
         replyUserId: 0, //查找回帖人的ID
         topicState: -1, //帖子状态[0未结贴 2 结贴 3 草稿贴]
-        topicDetail: "" //帖子描述
+        topicDetail: "", //帖子描述
+        isAllContent: false //是否全文搜索
       },
       ConditionQuery: {
         topicState: [
@@ -286,7 +292,7 @@ export default {
       this.$store.state.user.userinfo.CompanyName ==
       "（开发）深圳市布易科技有限公司";
     // console.log(this.showNoBtn);
-    await this.LoadCondition()
+    await this.LoadCondition();
     // this.getTagList();
     // console.log(this.$store.state.user);
     this.roleState = this.$store.state.user.userinfo.Role;
@@ -299,6 +305,7 @@ export default {
     this.SubmitQuery.topicDetail = this.$route.query.topicDetail || "";
     this.SubmitQuery.topicState = Number(this.$route.query.topicState || -1);
     this.SubmitQuery.topicType = this.$route.query.topicType || "";
+    this.SubmitQuery.isAllContent = Boolean(this.$route.query.isAllContent)
     this.handleClickSearch();
   },
   methods: {
@@ -404,13 +411,13 @@ export default {
         LoadQueryCondition().then(res => {
           if (res.Success) {
             this.ConditionQuery = { ...res.Data, ...this.ConditionQuery };
-            resolve()
+            resolve();
           } else {
             this.$message({
               message: res.ErrMes,
               type: "error"
             });
-            reject(res.ErrMes)
+            reject(res.ErrMes);
           }
         });
       });
@@ -495,7 +502,7 @@ export default {
               }
               return el;
             });
-          this.total = res.Data.Total||0
+          this.total = res.Data.Total || 0;
         } else {
           this.$message({
             message: res.ErrMes,

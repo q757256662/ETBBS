@@ -31,16 +31,16 @@
                 </template>
             </el-table-column>
     </el-table>-->
+    <router-link :to="'/TopicSingle?topicId='+item.TopicId" v-for="(item,index) in tableData" :key="item.ReplyId+item.IsHot">
+      <collectionItem
+        :item="item"
+        :background="index"
+        @flashPage="getMyCollect"
+        @onSettingCollect="handleSettingCollect"
+        :class="{'collection-class':true,'border-striped':index%2==0}"
+      ></collectionItem>
+    </router-link>
 
-    <collectionItem
-      v-for="(item,index) in tableData"
-      :key="item.ReplyId+item.IsHot"
-      :item="item"
-      :background="index"
-      @flashPage="getMyCollect"
-      @onSettingCollect="handleSettingCollect"
-      :class="{'collection-class':true,'border-striped':index%2==0}"
-    ></collectionItem>
     <noItem v-if="tableData.length==0" v-loading="loadingState"></noItem>
     <!-- <el-pagination
       class="page"
@@ -50,11 +50,8 @@
       @current-change="handlePageChange"
       :page-sizes="[10, 20, 30, 50]"
       :total="total"
-    ></el-pagination> -->
-    <Pagination :total="total" @PageChange="getMyCollect" :listQuery="queryList" class="page">
-
-    </Pagination>
-
+    ></el-pagination>-->
+    <Pagination :total="total" @PageChange="getMyCollect" :listQuery="queryList" class="page"></Pagination>
   </div>
 </template>
 <script>
@@ -62,7 +59,7 @@ import { getList, deleteColletion, setHot } from "@/api/mycollections.js";
 import collectionItem from "@/components/TopicItem/collectionItem.vue";
 import noItem from "@/components/NoItem";
 import { formatTime, delHtmlTag } from "@/utils/index";
-import Pagination from '@/components/Pagination'
+import Pagination from "@/components/Pagination";
 
 export default {
   components: {
@@ -83,7 +80,7 @@ export default {
     };
   },
   created() {
-    this.queryList.pageIndex = Number(this.$route.query.pageIndex)||1
+    this.queryList.pageIndex = Number(this.$route.query.pageIndex) || 1;
     this.getMyCollect();
   },
   filters: {
@@ -218,10 +215,8 @@ export default {
   background: #fff;
   width: 100%;
   z-index: 1000;
-  
 }
-.border-striped{
+.border-striped {
   background: #ededed;
-
 }
 </style>

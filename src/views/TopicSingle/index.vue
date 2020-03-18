@@ -236,7 +236,7 @@
             </div>
           </div>
           <div v-else>
-            <el-tabs v-model="activeName">
+            <el-tabs v-model="activeName" @tab-click="handleInvite(activeName)">
               <el-tab-pane label="内部人员" name="first" class="invit-list">
                 <div
                   @click="changeChecked(item,index)"
@@ -259,7 +259,11 @@
                 class="invit-list"
                 v-if="userInfo.company_Id==1"
               >
+              <div v-if="inviteCusList.length==0" style="text-align:center;height:100%;width:100%">
+                暂无数据
+              </div>
                 <div
+                  v-else
                   @click="changeChecked(item,index)"
                   v-for="(item,index) in inviteCusList"
                   :key="item.UserId"
@@ -474,7 +478,8 @@ export default {
       isCanEndTopic: false, //是否可以结贴
       isCanEndState: false,
       viewState: {}, //关注状态
-      firstLoad:true
+      firstLoad: true,//初次加载帖子和内部人员
+      cusInviteFirst:true,//初次加载客户
     };
   },
   computed: {
@@ -523,7 +528,7 @@ export default {
     this.onPowerEnter()
       .then(res => {
         this.onInitData(this.$route.query.topicId);
-        this.handleInviteCus();
+        // this.handleInviteCus();
       })
       .catch(err => {
         this.$message.warning(err);
@@ -551,6 +556,13 @@ export default {
     window.removeEventListener("scroll", this.handleScroll); //  离开页面清除（移除）滚轮滚动事件
   },
   methods: {
+    /**获取客户信息 */
+    handleInvite(name){
+      if(this.cusInviteFirst&&name=='second'){
+        this.handleInviteCus()
+        this.cusInviteFirst = false
+      }
+    },
     /**检测客户是否有权限进入页面 */
     onPowerEnter() {
       return new Promise((resolve, reject) => {
@@ -593,7 +605,7 @@ export default {
     CloseInvite() {},
     showInvited(result) {
       this.onReplyLoadData();
-      if(result){
+      if (result) {
         this.inviteDialog = true;
       }
     },
@@ -720,13 +732,17 @@ export default {
     },
     /**邀请客户回答 */
     handleInviteCus() {
-      getCustomers({ topicId: this.topicId }).then(res => {
-        if (res.Success) {
-          this.inviteCusList = res.Data.Rows;
-        } else {
-          this.$message.waring(res.ErrMes);
-        }
-      });
+      // return new Promise((resolve, reject) => {
+        getCustomers({ topicId: this.topicId }).then(res => {
+          if (res.Success) {
+            this.inviteCusList = res.Data.Rows;
+            // resolve(res.Success);
+          } else {
+            this.$message.waring(res.ErrMes);
+            // resolve(res.ErrMes);
+          }
+        });
+      // });
     },
     /**邀请用户回答问题 */
     handleInviteUser() {
@@ -749,7 +765,7 @@ export default {
             // this.loadData.NotNoticeUser.splice(0);
             this.checkedArr = [];
             this.onReplyLoadData();
-            this.handleInviteCus();
+            // this.handleInviteCus();
             this.getList();
           } else {
             this.$message.warning(res.ErrMes);
@@ -791,14 +807,19 @@ export default {
 
     /**初始化列表 */
     onReplyLoadData() {
-      if(!this.firstLoad){
-        return true
+      if (!this.firstLoad) {
+        return true;
       }
       replyLoadData({ topicId: this.$route.query.topicId })
-        .then(res => {
+        .then(async res => {
           if (res.Success) {
-            this.firstLoad = false
-            this.loadData = {...this.loadData,...res.Data};
+            this.firstLoad = false;
+            try {
+              // let result = await this.handleInviteCus();
+            } catch (error) {
+              console.log(error)
+            }
+            this.loadData = { ...this.loadData, ...res.Data };
             if (this.userInfo.company_Id == 1) {
               for (var i = 3; 0 <= i && i < 4; i--) {
                 this.loadData.NotNoticeUser.unshift(this.arrAll[i]);
@@ -899,7 +920,17 @@ export default {
             this.viewState.topicType = res.Data.topicType;
             this.viewState.IsJoin = res.Data.IsJoin;
             this.viewState.createUser = res.Data.createUser;
-            this.loadData = {...this.loadData,...{tagId:res.Data.tagId,State:res.Data.State,IsCanEndTopic:res.Data.IsCanEndTopic,topicType:res.Data.topicType,IsJoin:res.Data.IsJoin,createUser:res.Data.createUser}}
+            this.loadData = {
+              ...this.loadData,
+              ...{
+                tagId: res.Data.tagId,
+                State: res.Data.State,
+                IsCanEndTopic: res.Data.IsCanEndTopic,
+                topicType: res.Data.topicType,
+                IsJoin: res.Data.IsJoin,
+                createUser: res.Data.createUser
+              }
+            };
           }
         })
         .catch(err => {

@@ -5,7 +5,6 @@
         <div style="line-height: 45px;margin-right: 18px;">
           <!-- <el-checkbox style="margin:0 7px 0 8px;" :indeterminate="isIndeterminate" v-model="checkAll" @change="handleCheckAllChange">全选</el-checkbox> -->
         </div>
-
         <!-- <span>卡片名称</span> -->
         <!-- <el-button  type="text">操作按钮</el-button> -->
         <div>
@@ -20,7 +19,10 @@
         </div>
       </div>
       <div v-if="type=='link'">
-        <div v-for="item in inviteListReplace" :key="item.TopicId" class="text item">
+        <div v-if="inviteListReplace.length==0">
+          <div style="text-align:center">暂无信息</div>
+        </div>
+        <div v-for="item in inviteListReplace" :key="item.TopicId" class="text item" v-else>
           <span class="title" :title="item.TopicTitle">{{item.TopicTitle}}</span>
           <el-button size="mini" @click="handleInviteReply(item)">复制链接</el-button>
         </div>
